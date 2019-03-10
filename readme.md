@@ -20,12 +20,20 @@ I would like to store data in arbitrary databases and access said data via webso
 - I would like to be able to specify database per model
 - I would like to be able to use the folling integrations:
     - lowdb
-    - memory only database
-    - couchdb
+    - memory only database (candidates: lokijs, pouchdb, ...redis?)
+    - mongodb
     - Sequalise
 - I would like to access my data through a Restfull API
 - I would like to access my data through a Websocket interface
 
-Extending stories that build on top of base stories
+Extending stories, might be better off as some type of extensions to keep the repo focused
 - I would like to be able to syncronise clocks with the application
 - I would like to be able to subscribe to model CRUD change events (Websocket and RestFull)
+- I would like to set up a callback url for CRUD change events that calls a url with the change set
+
+
+
+
+// Structural notes
+ - API Testing with async jest https://jestjs.io/docs/en/tutorial-async
+

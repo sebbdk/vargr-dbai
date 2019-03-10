@@ -1,6 +1,13 @@
 {
-  "name": "vargr-kodam",
+  "name": "vargr-koida",
   "version": "0.0.1",
   "main": "index.js",
-  "license": "MIT"
+  "license": "MIT",
+  "scripts": {
+    "test":"jest",
+    "test:watch":"jest --watch"
+  },
+  "devDependencies": {
+    "jest": "^24.3.0"
+  }
 }
