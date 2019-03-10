@@ -1,5 +1,5 @@
 # Koida
-Koa api data storage abstration.
+Koa api databases hydra storage abstration.
 
 Returns a configured koa instance with a Restfull CRUD API configured.
 Can be configured to use Sequalize, MongoDB, in memmory database, lowdb or all three together.
@@ -18,7 +18,7 @@ I would like to store data in arbitrary databases and access said data via webso
 # Stories
 - I would would like to be able to optionally add validation to my models
 - I would like to be able to specify database per model
-- I would like to be able to use the folling integrations:
+- I would like to be able to use the follwing integrations:
     - lowdb
     - memory only database (candidates: lokijs, pouchdb, ...redis?)
     - mongodb
