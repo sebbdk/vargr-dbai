@@ -11,10 +11,10 @@ module.exports.KoiDB = async function(config) {
 
     const dbiMap = Object
         .keys(dbiClassMap)
-        .reduce((acc, key) => ({...acc, [key]: new dbiClassMap[key](config)}), {});
+        .reduce((acc, key) => ({...acc, [key]: new dbiClassMap[key]()}), {});
 
     // Error handling here please
-    const initPromises = Object.entries(dbiMap).map(([key, dbi]) => dbi.init());
+    const initPromises = Object.entries(dbiMap).map(([name, dbi]) => dbi.init(name, config));
     await Promise.all(initPromises);
     return buildMethods(dbiMap, config);
 }
@@ -22,11 +22,23 @@ module.exports.KoiDB = async function(config) {
 function getDbiForList(list, config, dbiMap) {
     const db = Object.keys(dbiMap).length === 1
         ? Object.entries(dbiMap).pop()[1]
-        : config.lists[list].db;
+        : dbiMap[config.lists[list].db];
 
     return db;
 }
 module.exports.getDbiForList = getDbiForList;
+
+function getListsForDB(config, db) {
+    if (Object.keys(config.dbs).length === 1) {
+        return config.lists;
+    } else {
+        return Object
+            .entries(config.lists)
+            .filter(([key, value]) => value.db === db)
+            .reduce((acc, [key, value]) => ({...acc, [key]:value }), {});
+    }
+}
+module.exports.getListsForDB = getListsForDB;
 
 function buildMethods(dbiMap, config) {
     return actionNames.reduce((actions, action) => {
