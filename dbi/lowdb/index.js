@@ -24,11 +24,39 @@ module.exports = class {
     }
 
     async find(list, query) {
-        return this.db.get(list).filter(query.where).value();
+        let results = this.db.get(list).filter(query.where).value();
+
+        if (query.include !== undefined) {
+            await Promise.all(Object.keys(query.include).map(async (IncludeList) => {
+                await Promise.all(results.filter(async (result) => {
+                    // Build subQuery from input
+                    const subQuery = Object.keys(query.include[IncludeList].on).reduce((acc, ruleKey) => {
+                        return {
+                            ...acc,
+                            [query.include[IncludeList].on[ruleKey]]: result[ruleKey]
+                        };
+                    }, {});
+
+                    // Assume query based on naming conventions
+                    // @TODO
+
+                    result[IncludeList] = await this.find(IncludeList, { where: subQuery });
+                }));
+
+                // Handle required: true, basically right joins the results.
+                if (query.include[IncludeList].required) {
+                    results = results.filter(res => res[IncludeList].length > 0);
+                }
+            }));
+        }
+
+        return results;
     }
 
+    // Should be a find all with limit????
     async findOne(list, query) {
-        return this.db.get(list).find(query.where).value();
+        const results = await this.find(list, query);
+        return results.length > 0 ? results.shift() : null;
     }
 
     async update(list, query) {

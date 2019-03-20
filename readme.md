@@ -15,7 +15,7 @@ Everything, this project is currently in speccing phase..
 # The epic
 I would like to store data in arbitrary databases and access said data via websockets and a Restfull API.
 
-# Stories
+## Stories
 - I would would like to be able to optionally add validation to my models
 - I would like to be able to specify database per model
 - I would like to be able to use the follwing integrations:
@@ -25,6 +25,10 @@ I would like to store data in arbitrary databases and access said data via webso
     - Sequalise
 - I would like to access my data through a Restfull API
 - I would like to access my data through a Websocket interface
+
+## Performance stories
+- I would like to be able to optionally memoise the query methods, and invalidate them with create/update
+- I would like to share db requests, so if 2 equal requests are requested at the same time, then only one db request will be made
 
 Extending stories, might be better off as some type of extensions to keep the repo focused
 - I would like to be able to syncronise clocks with the application
