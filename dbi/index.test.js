@@ -47,8 +47,8 @@ test('Read multiples items and left join data from another lists in dbi', async 
     const lists = { messages: {}, users: {} };
     const db1 = new lowDBI();
     await db1.init(lists, {});
-    await db1.create('messages', { data: { id: 1, user_id: 1, message: 'cakes are awesome' } });
-    await db1.create('messages', { data: { id: 2, user_id: 2, message: 'I like popsicles' } });
+    await db1.create('messages', { data: {id: 1, user_id: 1, message: 'cakes are awesome'} });
+    await db1.create('messages', { data: {id: 2, user_id: 2, message: 'I like popsicles'} });
     await db1.create('users', { data: {id: 1, name: 'jane joe'} });
     await db1.create('users', { data: {id: 2, name: 'Poppa joe'} });
 
@@ -69,8 +69,8 @@ test('Read multiples items and right join data from another lists in dbi', async
     const lists = { messages: {}, users: {} };
     const db1 = new lowDBI();
     await db1.init(lists, {});
-    await db1.create('messages', { data: { id: 1, user_id: 1, message: 'cakes are awesome' } });
-    await db1.create('messages', { data: { id: 2, user_id: 2, message: 'I like popsicles' } });
+    await db1.create('messages', { data: {id: 1, user_id: 1, message: 'cakes are awesome'} });
+    await db1.create('messages', { data: {id: 2, user_id: 2, message: 'I like popsicles'} });
     await db1.create('users', { data: {id: 2, name: 'Poppa joe'} });
 
     const result = await db1.find('messages', {
@@ -87,7 +87,7 @@ test('Read multiples items and right join data from another lists in dbi', async
     expect(result.length).toEqual(1);
 });
 
-test('Read multiple items in dbi', async () => {
+test('Read multiple items in dbi width query', async () => {
     const lists = { messages: {} };
     const db1 = new lowDBI();
     await db1.init(lists, {});
@@ -99,15 +99,28 @@ test('Read multiple items in dbi', async () => {
     expect(results.length).toEqual(2);
 });
 
+test('Read multiple items in dbi without query', async () => {
+    const lists = { messages: {} };
+    const db1 = new lowDBI();
+    await db1.init(lists, {});
+    await db1.create('messages', { data: {id: 1, type: 'A', name: 'john doe'} });
+    await db1.create('messages', { data: {id: 2, type: 'B', name: 'jane doe'} });
+    await db1.create('messages', { data: {id: 3, type: 'A', name: 'poppa doe'} });
+
+    const results = await db1.find('messages');
+    expect(results.length).toEqual(3);
+});
+
 test('Update an item in dbi', async () => {
     const lists = { messages: {} };
     const db1 = new lowDBI();
     await db1.init(lists, {});
     await db1.create('messages', { data: {id: 1, name: 'john doe'} });
 
-    const result = await db1.update('messages', { where: { id: 1 }, data: { name: 'jane doe' }});
+    const result = await db1.update('messages', { where: {id: 1}, data: {name: 'jane doe'} });
     expect(result.name).toEqual('jane doe');
 });
+
 
 test('Delete an item in dbi', async () => {
     const lists = { messages: {} };
@@ -115,7 +128,7 @@ test('Delete an item in dbi', async () => {
     await db1.init(lists, {});
     await db1.create('messages', { data: {id: 1, name: 'john doe'} });
 
-    await db1.delete('messages', { where: { id: 1 } });
-    const res = await db1.find('messages', { where: { } });
+    await db1.delete('messages', { where: {id: 1} });
+    const res = await db1.find('messages', { where: {} });
     expect(res.length).toEqual(0);
 });

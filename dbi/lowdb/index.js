@@ -23,7 +23,7 @@ module.exports = class {
             .write();
     }
 
-    async find(list, query) {
+    async find(list, query = {}) {
         let results = this.db.get(list).filter(query.where).value();
 
         if (query.include !== undefined) {
@@ -54,12 +54,12 @@ module.exports = class {
     }
 
     // Should be a find all with limit????
-    async findOne(list, query) {
+    async findOne(list, query = {}) {
         const results = await this.find(list, query);
         return results.length > 0 ? results.shift() : null;
     }
 
-    async update(list, query) {
+    async update(list, query = {}) {
         return await this.db.get(list)
             .find(query.where)
             .assign(query.data)
