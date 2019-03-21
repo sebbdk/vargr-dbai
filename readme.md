@@ -9,6 +9,9 @@ Features a Restfull and websocket based API with validation and data change even
 This project is made with rapid develoment in mind, so is supposed to work with as little configuration as possible.
 Keeping it self open for later changes of database types, adding of validation etc. as the implementing project matures.
 
+## random notes
+Consider naming the orm, something like 'just give me data' or 'careless data', 'database unaware orm', etc.
+
 # Todo
 Everything, this project is currently in speccing phase..
 
