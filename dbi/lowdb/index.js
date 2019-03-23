@@ -2,6 +2,36 @@ const low = require('lowdb')
 const FileSync = require('lowdb/adapters/FileSync')
 const Memory = require('lowdb/adapters/Memory')
 
+const lookTypes = {
+    '$like': (field, lookValue) => {
+        return field.indexOf(lookValue) !== -1;
+    },
+    '$notLike': (field, lookValue) => {
+        return field.indexOf(lookValue) === -1;
+    },
+    '$qt': (field, lookValue) => {
+        return field > lookValue;
+    },
+    '$qte': (field, lookValue) => {
+        return field >= lookValue;
+    },
+    '$lt': (field, lookValue) => {
+        return field < lookValue;
+    },
+    '$lte': (field, lookValue) => {
+        return field <= lookValue;
+    }
+}
+
+function matchField(field, options) {
+    if (typeof(options) === 'object') {
+        const lookType = Object.keys(options).pop();
+        return lookTypes[lookType](field, options[lookType]);
+    }
+
+    return field === options;
+}
+
 module.exports = class {
     async init(lists, config = {}) {
         this.db = low(
@@ -24,8 +54,42 @@ module.exports = class {
     }
 
     async find(listName, query = {}) {
-        let results = this.db.get(listName).filter(query.where).value();
+        let results = this.db
+            .get(listName)
+            .filter(item => {
+                let match = true;
+                let hasOrMatch = false;
 
+                // @todo Move to method
+                if (query.where) {
+                    for (const [key, value] of Object.entries(query.where)) {
+                        if (key !== '$or' && !matchField(item[key], value)) {
+                            match = false;
+                            break;
+                        }
+                    }
+                }
+
+                // @todo Move to method
+                if (query.where && query.where.$or !== undefined) {
+                    for (const orSel of query.where.$or) {
+                        for (const [key, value] of Object.entries(orSel)) {
+                            if (matchField(item[key], value)) {
+                                hasOrMatch = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    match = match && hasOrMatch;
+                }
+
+                return match ;
+            })
+            .value();
+
+
+        // @todo Move to method
         if (query.include !== undefined) {
             await Promise.all(Object.keys(query.include).map(async (subListName) => {
                 const subList = query.include[subListName];
