@@ -9,10 +9,10 @@ const lookTypes = {
     '$notLike': (field, lookValue) => {
         return field.indexOf(lookValue) === -1;
     },
-    '$qt': (field, lookValue) => {
+    '$gt': (field, lookValue) => {
         return field > lookValue;
     },
-    '$qte': (field, lookValue) => {
+    '$gte': (field, lookValue) => {
         return field >= lookValue;
     },
     '$lt': (field, lookValue) => {
@@ -46,14 +46,26 @@ module.exports = class {
         this.db.defaults(preppedLists).write();
     }
 
-    async create(list, { data }) {
-        return this.db
-            .get(list)
-            .push(data)
-            .write();
+    async createCollection(name, defaultData = {}) {
+        this.db.defaults({ [name]: defaultData }).write();
     }
 
-    async find(listName, query = {}) {
+    async removeCollection(name) {
+        const state = this.db.getState();
+        delete state[name];
+        this.db.setState(state)
+    }
+
+    async create(list, { data }) {
+        const items = Array.isArray(data) ? data : [data];
+        const listRef = this.db.get(list);
+
+        return items.map(item => listRef.push(item).write());
+    }
+
+    async find(listName, { offset = 0, limit = 20, where, include } = {}) {
+        const offsetLimit = offset + limit;
+
         let results = this.db
             .get(listName)
             .filter(item => {
@@ -61,8 +73,8 @@ module.exports = class {
                 let hasOrMatch = false;
 
                 // @todo Move to method
-                if (query.where) {
-                    for (const [key, value] of Object.entries(query.where)) {
+                if (where) {
+                    for (const [key, value] of Object.entries(where)) {
                         if (key !== '$or' && !matchField(item[key], value)) {
                             match = false;
                             break;
@@ -71,8 +83,8 @@ module.exports = class {
                 }
 
                 // @todo Move to method
-                if (query.where && query.where.$or !== undefined) {
-                    for (const orSel of query.where.$or) {
+                if (where && where.$or !== undefined) {
+                    for (const orSel of where.$or) {
                         for (const [key, value] of Object.entries(orSel)) {
                             if (matchField(item[key], value)) {
                                 hasOrMatch = true;
@@ -86,13 +98,14 @@ module.exports = class {
 
                 return match ;
             })
+            .slice(offset, offsetLimit)
             .value();
 
 
         // @todo Move to method
-        if (query.include !== undefined) {
-            await Promise.all(Object.keys(query.include).map(async (subListName) => {
-                const subList = query.include[subListName];
+        if (include !== undefined) {
+            await Promise.all(Object.keys(include).map(async (subListName) => {
+                const subList = include[subListName];
 
                 await Promise.all(results.filter(async (result) => {
                     let subQuery = null;

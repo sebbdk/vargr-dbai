@@ -11,6 +11,7 @@
     "jest": "^24.3.0"
   },
   "dependencies": {
-    "lowdb": "^1.0.0"
+    "lowdb": "^1.0.0",
+    "mongodb": "^3.2.2"
   }
 }
