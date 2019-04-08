@@ -21,6 +21,10 @@ Object.keys(dbis).forEach(dbiName => {
             } catch(e) {}
         });
 
+        xit('can close connection gracefully', async () => {
+           //@todo
+        });
+
         it('add collection', async () => {
             try {
                 await dba.create('messages', { data: {'abc':'def'} });
@@ -113,7 +117,7 @@ Object.keys(dbis).forEach(dbiName => {
             expect(results2.length).toEqual(4);
         });
 
-        xit('can use $like query', async () => {
+        it('can use $like query', async () => {
             const lists = { messages: {} };
             const db1 = new DBI();
             await db1.init(lists, {});
@@ -139,7 +143,7 @@ Object.keys(dbis).forEach(dbiName => {
             expect(results[1].name.indexOf('sage') > -1).toEqual(true);
         });
 
-        xit('can use $notLike X query', async () => {
+        it('can use $notLike X query', async () => {
             const lists = { messages: {} };
             const db1 = new DBI();
             await db1.init(lists, {});
@@ -335,7 +339,7 @@ Object.keys(dbis).forEach(dbiName => {
             expect(res.length).toEqual(0);
         });
 
-        xit('can read a single item and left join data from another lists', async () => {
+        it('can read a single item and left join data from another lists', async () => {
             const lists = { messages: {}, users: {} };
             const db1 = new DBI();
             await db1.init(lists, {});
@@ -355,64 +359,70 @@ Object.keys(dbis).forEach(dbiName => {
             expect(result.users[0].id).toEqual(2);
         });
 
-        xit('can read multiple items and left join data from another lists', async () => {
-            const lists = { messages: {}, users: {} };
+        it('can read multiple items and left join data from another lists', async () => {
+            const lists = { messages: {}, leftusers: {} };
             const db1 = new DBI();
             await db1.init(lists, {});
             await db1.create('messages', { data: {id: 1, user_id: 1, message: 'cakes are awesome'} });
             await db1.create('messages', { data: {id: 2, user_id: 2, message: 'I like popsicles'} });
-            await db1.create('users', { data: {id: 1, name: 'jane joe'} });
-            await db1.create('users', { data: {id: 2, name: 'Poppa joe'} });
+            await db1.create('leftusers', { data: {id: 1, name: 'jane joe'} });
+            await db1.create('leftusers', { data: {id: 2, name: 'Poppa joe'} });
 
             const result = await db1.find('messages', {
                 include: {
-                    users: {
+                    leftusers: {
                         on: { 'user_id': 'id' }
                     }
                 }
             });
 
-            expect(Array.isArray(result[0].users)).toEqual(true);
-            expect(result[0].users[0].id).toEqual(1);
+            expect(Array.isArray(result[0].leftusers)).toEqual(true);
+            expect(result[0].leftusers[0].id).toEqual(1);
+
+            await dba.removeCollection('leftusers');
         });
 
-        xit('can read multiple items and right join data from another lists', async () => {
-            const lists = { messages: {}, users: {} };
+        it('can read multiple items and right join data from another lists', async () => {
+            const lists = { messages: {}, rightusers: {} };
             const db1 = new DBI();
             await db1.init(lists, {});
             await db1.create('messages', { data: {id: 1, user_id: 1, message: 'cakes are awesome'} });
             await db1.create('messages', { data: {id: 2, user_id: 2, message: 'I like popsicles'} });
-            await db1.create('users', { data: {id: 2, name: 'Poppa joe'} });
+            await db1.create('rightusers', { data: {id: 2, name: 'Poppa joe'} });
 
             const result = await db1.find('messages', {
                 include: {
-                    users: {
+                    rightusers: {
                         on: { 'user_id': 'id' },
                         required: true
                     }
                 }
             });
 
-            expect(Array.isArray(result[0].users)).toEqual(true);
-            expect(result[0].users[0].id).toEqual(2);
+            expect(Array.isArray(result[0].rightusers)).toEqual(true);
+            expect(result[0].rightusers[0].id).toEqual(2);
             expect(result.length).toEqual(1);
+
+            await dba.removeCollection('rightusers');
         });
 
-        xit('will assume join type on when including a child list', async () => {
-            const lists = { messages: {}, users: {} };
+        it('will assume join type on when including a child list', async () => {
+            const lists = { messages: {}, humans: {} };
             const db1 = new DBI();
             await db1.init(lists, {});
-            await db1.create('users', { data: {id: 2, name: 'Poppa joe'} });
-            await db1.create('messages', { data: {id: 1, users_id: 2, message: 'cakes are awesome'} });
-            await db1.create('messages', { data: {id: 2, users_id: 2, message: 'I like popsicles'} });
+            await db1.create('humans', { data: {id: 2, name: 'Poppa joe'} });
+            await db1.create('messages', { data: {id: 1, humans_id: 2, message: 'cakes are awesome'} });
+            await db1.create('messages', { data: {id: 2, humans_id: 2, message: 'I like popsicles'} });
 
-            const result = await db1.find('users', {
+            const result = await db1.find('humans', {
                 include: { messages: {} }
             });
 
             expect(Array.isArray(result[0].messages)).toEqual(true);
             expect(result[0].messages.length).toEqual(2);
-            expect(result[0].messages[0].users_id).toEqual(2);
+            expect(result[0].messages[0].humans_id).toEqual(2);
+
+            await dba.removeCollection('humans');
         });
 
         xit('will assume join type when a child list includes a parent list', async () => {

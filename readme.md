@@ -1,4 +1,13 @@
 # Koida
+
+This turned into a  much more of a common database interface for now.
+So i might split this library once i am done with that part and start the web part.
+
+The common idea, is a bunch of tests that allows us to create classes to interact with the different
+
+
+
+#old description
 Koa api databases hydra storage abstration.
 
 Returns a configured koa instance with a Restfull CRUD API configured.

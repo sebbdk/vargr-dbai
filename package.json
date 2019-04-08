@@ -12,6 +12,6 @@
   },
   "dependencies": {
     "lowdb": "^1.0.0",
-    "mongodb": "^3.2.2"
+    "mongodb": "^3.2.3"
   }
 }
