@@ -10,9 +10,12 @@ All interfaces are written with a common test suite, so have the same API regard
 * MongoDB
 
 ## Todo:
-* Sequalize integration
+* Sequalize integration (to support Postgres, MySQL, MariaDB, SQLite and Microsoft SQL Server)
 * Documentation
 * Test suite refactor
+* Pick new integrations, Redis, CouchDB..??
+* Are the common missing use cases?
+* Consider Transaction support
 
 ## Architectural vision
 
