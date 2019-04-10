@@ -15,8 +15,8 @@ All interfaces are written with a common test suite, so have the same API regard
 * Test suite refactor
 * Pick new integrations, Redis, CouchDB..??
 * Are there any common missing use cases?
- * Nested document support or save/update related table row
- * Transaction support
+    * Nested document support or save/update related table row
+    * Transaction support
 
 ## Architectural vision
 
