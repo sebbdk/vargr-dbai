@@ -46,6 +46,10 @@ module.exports = class {
         this.db.defaults(preppedLists).write();
     }
 
+    async close() {
+        return true;
+    }
+
     async createCollection(name, defaultData = {}) {
         this.db.defaults({ [name]: defaultData }).write();
     }
@@ -145,10 +149,21 @@ module.exports = class {
         return results.length > 0 ? results.shift() : null;
     }
 
-    async update(list, query = {}) {
+    async updateOne(list, query = {}) {
         return await this.db.get(list)
             .find(query.where)
             .assign(query.data)
+            .write();
+    }
+
+    async updateMany(list, query = {}) {
+        return await this.db.get(list)
+            .filter(query.where)
+            .each(item => {
+                Object.keys(query.data).forEach(key => {
+                    item[key] = query.data[key]
+                });
+            })
             .write();
     }
 

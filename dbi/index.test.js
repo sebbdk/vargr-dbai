@@ -21,10 +21,6 @@ Object.keys(dbis).forEach(dbiName => {
             } catch(e) {}
         });
 
-        xit('can close connection gracefully', async () => {
-           //@todo
-        });
-
         it('add collection', async () => {
             try {
                 await dba.create('messages', { data: {'abc':'def'} });
@@ -321,11 +317,26 @@ Object.keys(dbis).forEach(dbiName => {
             await db1.init(lists, {});
             await db1.create('messages', { data: {id: 1, name: 'john doe'} });
 
-            const result = await db1.update('messages', { where: {id: 1}, data: {name: 'jane doe'} });
+            const result = await db1.updateOne('messages', { where: {id: 1}, data: {name: 'jane doe'} });
             expect(result).toBeTruthy();
 
             const results2 = await db1.findOne('messages', { where: { id: 1 } });
             expect(results2.name).toEqual('jane doe');
+        });
+
+        it('can update multiple items', async () => {
+            const lists = { messages: {} };
+            const db1 = new DBI();
+            await db1.init(lists, {});
+            await db1.create('messages', { data: {id: 1, type: 'a', name: 'john doe'} });
+            await db1.create('messages', { data: {id: 2, type: 'a', name: 'john doe'} });
+
+            const result = await db1.updateMany('messages', { where: {type: 'a'}, data: { updated: true } });
+            expect(result).toBeTruthy();
+
+            const results2 = await db1.find('messages', { where: { type: 'a' } });
+            expect(results2[0].updated).toEqual(true);
+            expect(results2[1].updated).toEqual(true);
         });
 
         it('can delete an item', async () => {
@@ -425,7 +436,7 @@ Object.keys(dbis).forEach(dbiName => {
             await dba.removeCollection('humans');
         });
 
-        xit('will assume join type when a child list includes a parent list', async () => {
+        it('will assume join type when a child list includes a parent list', async () => {
             const lists = { messages: {}, users: {} };
             const db1 = new DBI();
             await db1.init(lists, {});
@@ -440,6 +451,13 @@ Object.keys(dbis).forEach(dbiName => {
             expect(Array.isArray(result[1].users)).toEqual(true);
             expect(result[1].users[0].id).toEqual(2);
             expect(result.length).toEqual(2);
+
+            await dba.removeCollection('users');
+        });
+
+        it('can close connection gracefully', async () => {
+            const down = await dba.close();
+            expect(down).toBe(true);
         });
     });
 });

@@ -25,56 +25,91 @@ function convertWhereToMongo(query) {
     return res;
 }
 
-function formatJoinAgregate(listName, aggregateOptions = [], include = {}) {
-    Object.keys(include).forEach((collectionName) => {
-        let localField = 'id'
-        let foreignField = listName + '_id'
-        const cond = include[collectionName].on;
-
-        if (cond) {
-            localField = Object.keys(cond).pop()
-            foreignField = Object.values(cond).pop()
-        }
-
-        aggregateOptions.push({
-            $lookup: {
-                from: collectionName,
-                localField,
-                foreignField,
-                as: collectionName
-              }
-        });
-
-        // Handle right joins
-        if(include[collectionName].required) {
-            aggregateOptions.push({
-                $match: {
-                    [collectionName]: { $exists: true, $ne: [] }
-                }
-            });
-        }
-    })
-
-    return aggregateOptions;
-}
-
 module.exports = class {
-    constructor() {}
+
+    constructor() {
+        this.collectionMapCache = {};
+    }
 
     async init(name, { port = 27017, dbname = 'test' }) {
         return new Promise((resolve) => {
             const url = `mongodb://127.0.0.1:${port}/${dbname}`;
 
-            MongoClient.connect(url, { useNewUrlParser: true }, (err, db) => {
+            MongoClient.connect(url, { useNewUrlParser: true }, (err, connection) => {
                 if (err) throw err;
-                this.db = db.db(dbname);
+                this.db = connection.db(dbname);
+                this.connection = connection;
                 resolve();
             });
         })
     }
 
+    async formatJoinAgregate(listName, aggregateOptions = [], include = {}) {
+        const includeKeys = Object.keys(include);
+        for(let i = 0; i < includeKeys.length; i++) {
+            const includeListName = includeKeys[i];
+
+            let localField = 'id'
+            let foreignField = listName + '_id'
+            const cond = include[includeListName].on;
+    
+            if (cond) {
+                localField = Object.keys(cond).pop()
+                foreignField = Object.values(cond).pop()
+            } else {
+                const localFields = await this.getCollectionKeys(listName)
+                const isChild = localFields.indexOf(includeListName + '_id') > -1;
+
+
+                localField = isChild ? includeListName + '_id' : 'id';
+                foreignField = isChild ? 'id' : listName + '_id';
+            }
+    
+            aggregateOptions.push({
+                $lookup: {
+                    from: includeListName,
+                    localField,
+                    foreignField,
+                    as: includeListName
+                  }
+            });
+    
+            // Handle right joins
+            if(include[includeListName].required) {
+                aggregateOptions.push({
+                    $match: {
+                        [includeListName]: { $exists: true, $ne: [] }
+                    }
+                });
+            }
+        }
+    
+        return aggregateOptions;
+    }
+
+    async getCollectionKeys(listName, forceLookup = false) {
+        if (!forceLookup && this.collectionMapCache[listName]) {
+            return this.collectionMapCache[listName];
+        }
+
+        const mResult = await this.db.collection(listName).mapReduce(
+            function() {
+                for (var key in this) { emit(key, null); }
+            },
+            function(key, stuff) {
+                return null;
+            },
+            {
+                query: {},
+                out: listName + "_keys"
+            }
+        );
+
+        return await mResult.distinct("_id");
+    }
+
     async close() {
-        // @TODO
+        return (await this.connection.close()) === null;
     }
 
     async createCollection(name) {
@@ -107,7 +142,7 @@ module.exports = class {
         ];
 
         if (include) {
-            formatJoinAgregate(listName, aggregateOptions, include);
+            await this.formatJoinAgregate(listName, aggregateOptions, include, this.db);
         }
 
         let res = await this.db
@@ -136,7 +171,7 @@ module.exports = class {
         ];
 
         if (include) {
-            formatJoinAgregate(listName, aggregateOptions, include);
+            await this.formatJoinAgregate(listName, aggregateOptions, include, this.db);
         }
 
         const res = await this.db
@@ -147,10 +182,16 @@ module.exports = class {
         return res.pop();
     }
 
-    async update(listName, { data = {}, where = {} } = {}) {
+    async updateOne(listName, { data = {}, where = {} } = {}) {
         return await this.db
             .collection(listName)
-            .update(where, { $set: data }, { multi: true });
+            .updateOne(where, { $set: data }, { multi: true });
+    }
+
+    async updateMany(listName, { data = {}, where = {} } = {}) {
+        return await this.db
+            .collection(listName)
+            .updateMany(where, { $set: data }, { multi: true });
     }
 
     async delete(listName, { where = {} } = {}) {
