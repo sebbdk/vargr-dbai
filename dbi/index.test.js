@@ -21,6 +21,10 @@ Object.keys(dbis).forEach(dbiName => {
             } catch(e) {}
         });
 
+        it('should expose the internal db connection', async () => {
+            expect(dba.db).toBeTruthy()
+        });
+
         it('add collection', async () => {
             try {
                 await dba.create('messages', { data: {'abc':'def'} });
