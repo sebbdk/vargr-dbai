@@ -52,7 +52,7 @@ module.exports = class {
             let localField = 'id'
             let foreignField = listName + '_id'
             const cond = include[includeListName].on;
-    
+
             if (cond) {
                 localField = Object.keys(cond).pop()
                 foreignField = Object.values(cond).pop()
@@ -64,7 +64,7 @@ module.exports = class {
                 localField = isChild ? includeListName + '_id' : 'id';
                 foreignField = isChild ? 'id' : listName + '_id';
             }
-    
+
             aggregateOptions.push({
                 $lookup: {
                     from: includeListName,
@@ -73,7 +73,7 @@ module.exports = class {
                     as: includeListName
                   }
             });
-    
+
             // Handle right joins
             if(include[includeListName].required) {
                 aggregateOptions.push({
@@ -83,7 +83,7 @@ module.exports = class {
                 });
             }
         }
-    
+
         return aggregateOptions;
     }
 
