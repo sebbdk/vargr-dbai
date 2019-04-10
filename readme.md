@@ -10,7 +10,6 @@ All interfaces are written with a common test suite, so have the same API regard
 * MongoDB
 
 ## Todo:
-* Cleanup of unrelated code.
 * Sequalize integration
 * Documentation
 * Test suite refactor
