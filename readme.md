@@ -24,5 +24,5 @@ All interfaces are normalized with a single test suite to keep the same API.
 The reasoning is to keep this project small and modular.
 
 The shared test suite will ensure sensible defaults for all interfaces.
-These defaults are to keep configuration to a minimum and allow more rapid development.
+These defaults are to keep configuration to a minimum, and allow more rapid development.
 
