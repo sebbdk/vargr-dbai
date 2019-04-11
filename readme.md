@@ -30,6 +30,7 @@ I would like a library that will let me prototype common CRUD applications and u
 * Documentation
 * Test suite refactor
 * Pick new integrations, Redis, CouchDB..??
+   * https://insights.stackoverflow.com/survey/2019?utm_source=so-owned&utm_medium=announcement-banner&utm_campaign=dev-survey-2019#technology-_-most-loved-dreaded-and-wanted-databases
 * Are there any common missing use cases?
     * Nested document support or save/update related table row
     * Transaction support
