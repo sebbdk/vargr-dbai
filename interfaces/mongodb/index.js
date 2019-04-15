@@ -31,7 +31,7 @@ module.exports = class {
         this.collectionMapCache = {};
     }
 
-    async init(name, { port = 27017, dbname = 'test' }) {
+    async init({ port = 27017, dbname = 'test' }) {
         return new Promise((resolve) => {
             const url = `mongodb://127.0.0.1:${port}/${dbname}`;
 
@@ -112,8 +112,14 @@ module.exports = class {
         return (await this.connection.close()) === null;
     }
 
-    async createCollection(name) {
-        return await this.db.createCollection(name);
+    async createCollection(name, { initialItems = [] } = {}) {
+        const result = await this.db.createCollection(name);
+
+        if(initialItems.length > 0) {
+            await this.db.collection(name).insertMany(initialItems);
+        }
+
+        return result;
     }
 
     async removeCollection(listName) {

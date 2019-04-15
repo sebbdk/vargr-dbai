@@ -33,7 +33,7 @@ function matchField(field, options) {
 }
 
 module.exports = class {
-    async init(lists, config = {}) {
+    async init({ lists = {}, config = {} } = {}) {
         this.db = low(
             config.file === undefined
                 ? new Memory()
@@ -50,8 +50,8 @@ module.exports = class {
         return true;
     }
 
-    async createCollection(name, defaultData = {}) {
-        this.db.defaults({ [name]: defaultData }).write();
+    async createCollection(name, { initialItems = [] } = {}) {
+        this.db.defaults({ [name]: initialItems }).write();
     }
 
     async removeCollection(name) {
@@ -64,7 +64,9 @@ module.exports = class {
         const items = Array.isArray(data) ? data : [data];
         const listRef = this.db.get(list);
 
-        return items.map(item => listRef.push(item).write());
+        return items.map(item => {
+            listRef.push(item).write()
+        });
     }
 
     async find(listName, { offset = 0, limit = 20, where, include } = {}) {
