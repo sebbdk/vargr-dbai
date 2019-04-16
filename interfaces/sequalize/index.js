@@ -11,6 +11,16 @@ Case 2, collection is being created, needs definition
 
  */
 
+const Op = Sequelize.Op;
+const operatorsAliases = {
+  $or: Op.or,
+  $like: Op.like,
+  $notLike: Op.notLike,
+  $gt: Op.gt,
+  $gte: Op.gte,
+  $lt: Op.lt,
+  $lte: Op.lte,
+}
 
 module.exports = class {
 
@@ -18,8 +28,8 @@ module.exports = class {
         this.collections = {};
     }
 
-    async init({ dbname = 'test', host = 'localhost', username = 'root', password = 'root', port = 3306, dialect = 'mysql', models = {} }) {
-        this.db = new Sequelize(dbname, username, password, { host, port, dialect, logging: false });
+    async init({ unsafe = false, dbname = 'test', host = 'localhost', username = 'root', password = 'root', port = 3306, dialect = 'mysql', models = {} }) {
+        this.db = new Sequelize(dbname, username, password, { host, port, dialect, logging: false, operatorsAliases });
 
         const err = await this.db.authenticate();
 
@@ -32,7 +42,7 @@ module.exports = class {
                 await this.createCollection(collectionNames[c], { data:[], modelDef: models[collectionNames[c]] });
             }
 
-            await this.db.sync();
+            await this.db.sync({force: unsafe});
 
             return true;
         }
@@ -71,14 +81,20 @@ module.exports = class {
 
 
     async find(listName, { where = {}, limit, offset, include =  false } = {}) {
-        const res = await this.collections[listName].findAll({
-            where,
-            limit,
-            offset,
-            raw: true
-        });
+        try {
+            const res = await this.collections[listName].findAll({
+                where,
+                limit,
+                offset,
+                raw: true
+            });
+    
+            return res;
+        } catch(error) {
+            console.error(error);
+            return false;
+        }
 
-        return res;
     }
 
     async findOne(listName, { where = {}, limit, offset, include =  false } = {}) {
@@ -90,6 +106,20 @@ module.exports = class {
         });
 
         return res;
+    }
+
+    async updateOne(listName, { data = {}, where = {}} = {}) {
+        const item = await this.collections[listName].findOne({
+            where,
+            limit: 1
+        });
+
+        return await item.update(data);
+    }
+
+    async updateMany(listName, { data = {}, where = {}} = {}) {
+        const res = await this.collections[listName].update(data, { where });
+        return res[0] > 0;
     }
 
 };

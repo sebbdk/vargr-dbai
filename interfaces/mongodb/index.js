@@ -2,10 +2,12 @@ const { MongoClient } = require('mongodb');
 
 const formatters = {
     "$notLike": (res, key) => {
-        return { $not: new RegExp('.*' + res[key] + '.*') };
+        const reg = res[key].replace(new RegExp('%', 'g'), '.*');
+        return { $not: new RegExp(reg) };
     },
     "$like": (res, key) => {
-        return new RegExp('.*' + res[key] + '.*');
+        const reg = res[key].replace(new RegExp('%', 'g'), '.*');
+        return new RegExp(reg);
     }
 }
 

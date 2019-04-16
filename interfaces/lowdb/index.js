@@ -4,10 +4,12 @@ const Memory = require('lowdb/adapters/Memory')
 
 const lookTypes = {
     '$like': (field, lookValue) => {
-        return field.indexOf(lookValue) !== -1;
+        const reg = lookValue.replace(new RegExp('%', 'g'), '.*');
+        return field.match(reg) !== null;
     },
     '$notLike': (field, lookValue) => {
-        return field.indexOf(lookValue) === -1;
+        const reg = lookValue.replace(new RegExp('%', 'g'), '.*');
+        return field.match(reg) === null;
     },
     '$gt': (field, lookValue) => {
         return field > lookValue;
@@ -158,12 +160,12 @@ module.exports = class {
             .write();
     }
 
-    async updateMany(list, query = {}) {
+    async updateMany(list, { data = {}, where = {}} = {}) {
         return await this.db.get(list)
-            .filter(query.where)
+            .filter(where)
             .each(item => {
-                Object.keys(query.data).forEach(key => {
-                    item[key] = query.data[key]
+                Object.keys(data).forEach(key => {
+                    item[key] = data[key]
                 });
             })
             .write();
