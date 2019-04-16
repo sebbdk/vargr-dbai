@@ -22,13 +22,27 @@ const operatorsAliases = {
   $lte: Op.lte,
 }
 
+const assocTypes = [
+    "belongsTo",
+    "hasMany"
+];
+
 module.exports = class {
 
     constructor() {
         this.collections = {};
     }
 
-    async init({ unsafe = false, dbname = 'test', host = 'localhost', username = 'root', password = 'root', port = 3306, dialect = 'mysql', models = {} }) {
+    async init({
+        associations = {},
+        unsafe = false,
+        dbname = 'test',
+        host = 'localhost',
+        username = 'root',
+        password = 'root',
+        port = 3306,
+        dialect = 'mysql',
+        models = {} }) {
         this.db = new Sequelize(dbname, username, password, { host, port, dialect, logging: false, operatorsAliases });
 
         const err = await this.db.authenticate();
@@ -44,8 +58,28 @@ module.exports = class {
 
             await this.db.sync({force: unsafe});
 
+            this.setupAssociations(associations);
+
             return true;
         }
+    }
+
+    setupAssociations(associations) {
+        Object.keys(associations).forEach((fromAssoc) => {
+            assocTypes.forEach((assocType) => {
+                if(associations[fromAssoc][assocType]) {
+                    const toAssocConf = associations[fromAssoc][assocType];
+                    const toAssoc = this.collections[toAssocConf.model];
+
+                    this.collections[fromAssoc][assocType](toAssoc, {foreignKey: toAssocConf.foreignKey});
+                }
+            })
+        });
+    }
+
+    async close() {
+        await this.db.close();
+        return true;
     }
 
     async createCollection(collectionName, { initialItems = [], modelDef }) {
@@ -120,6 +154,10 @@ module.exports = class {
     async updateMany(listName, { data = {}, where = {}} = {}) {
         const res = await this.collections[listName].update(data, { where });
         return res[0] > 0;
+    }
+
+    async delete(listName, { where }) {
+        return await this.collections[listName].destroy({ where });
     }
 
 };

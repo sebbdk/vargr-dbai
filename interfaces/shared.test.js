@@ -26,7 +26,7 @@ const initializers = {
                     primaryKey: true
                 },
                 abc:Sequelize.STRING,
-                user_id: Sequelize.STRING,
+                user_id: Sequelize.UUID,
                 type: Sequelize.STRING,
                 name: Sequelize.STRING,
                 updated: Sequelize.BOOLEAN
@@ -40,6 +40,14 @@ const initializers = {
                 abc:Sequelize.STRING,
                 type: Sequelize.STRING,
                 name: Sequelize.STRING,
+            }
+        },
+        associations: {
+            messages: {
+                belongsTo: {
+                    foreignKey: 'user_id',
+                    model: 'users'
+                }
             }
         }
     }
@@ -55,6 +63,7 @@ Object.keys(dbis).forEach(dbiName => {
             dba = await new DBI();
             await dba.init({...initializers[dbiName], unsafe: true});
             await dba.createCollection('messages', { initialItems: [] });
+            await dba.createCollection('users', { initialItems: [] });
         });
 
         afterEach(async () => {
@@ -347,7 +356,7 @@ Object.keys(dbis).forEach(dbiName => {
             expect(results2[1].updated).toBeTruthy();
         });
 
-        xit('can delete an item', async () => {
+        it('can delete an item', async () => {
             await dba.create('messages', { data: {id: 1, name: 'john doe'} });
 
             await dba.delete('messages', { where: {id: 1} });
@@ -355,14 +364,11 @@ Object.keys(dbis).forEach(dbiName => {
             expect(res.length).toEqual(0);
         });
 
-        xit('can read a single item and left join data from another lists', async () => {
-            const lists = { messages: {}, users: {} };
-            const db1 = new DBI();
-            await db1.init({ lists });
-            await db1.create('messages', { data: { id: 1, user_id: 2, message: 'I like popsicles' } });
-            await db1.create('users', { data: {id: 2, name: 'jane doe'} });
+        it('can read a single item and left join data from another lists', async () => {
+            await dba.create('messages', { data: { id: 1, user_id: 2, message: 'I like popsicles' } });
+            await dba.create('users', { data: {id: 2, name: 'jane doe'} });
 
-            const result = await db1.findOne('messages', {
+            const result = await dba.findOne('messages', {
                 where: { id: 1 },
                 include: {
                     users: {
@@ -376,13 +382,10 @@ Object.keys(dbis).forEach(dbiName => {
         });
 
         xit('can read multiple items and left join data from another lists', async () => {
-            const lists = { messages: {}, leftusers: {} };
-            const db1 = new DBI();
-            await db1.init({ lists });
-            await db1.create('messages', { data: {id: 1, user_id: 1, message: 'cakes are awesome'} });
-            await db1.create('messages', { data: {id: 2, user_id: 2, message: 'I like popsicles'} });
-            await db1.create('leftusers', { data: {id: 1, name: 'jane joe'} });
-            await db1.create('leftusers', { data: {id: 2, name: 'Poppa joe'} });
+            await dba.create('messages', { data: {id: 1, user_id: 1, message: 'cakes are awesome'} });
+            await dba.create('messages', { data: {id: 2, user_id: 2, message: 'I like popsicles'} });
+            await dba.create('leftusers', { data: {id: 1, name: 'jane joe'} });
+            await dba.create('leftusers', { data: {id: 2, name: 'Poppa joe'} });
 
             const result = await db1.find('messages', {
                 include: {
@@ -460,7 +463,7 @@ Object.keys(dbis).forEach(dbiName => {
             await dba.removeCollection('users');
         });
 
-        xit('can close connection gracefully', async () => {
+        it('can close connection gracefully', async () => {
             const down = await dba.close();
             expect(down).toBe(true);
         });
