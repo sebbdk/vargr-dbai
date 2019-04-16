@@ -29,6 +29,7 @@ const initializers = {
                 user_id: Sequelize.STRING,
                 type: Sequelize.STRING,
                 name: Sequelize.STRING,
+                updated: Sequelize.BOOLEAN
             },
             users: {
                 id: {
@@ -52,7 +53,7 @@ Object.keys(dbis).forEach(dbiName => {
 
         beforeEach(async () => {
             dba = await new DBI();
-            await dba.init({...initializers[dbiName]});
+            await dba.init({...initializers[dbiName], unsafe: true});
             await dba.createCollection('messages', { initialItems: [] });
         });
 
@@ -131,7 +132,7 @@ Object.keys(dbis).forEach(dbiName => {
             await dba.create('messages', { data: {id: 1, type: 'B', name: 'john doe'} });
             await dba.create('messages', { data: {id: 2, type: 'B', name: 'jane doe'} });
             await dba.create('messages', { data: {id: 3, type: 'A', name: 'poppa doe'} });
-            await dba.create('messages', { data: {id: 3, type: 'A', name: 'poppa doe'} });
+            await dba.create('messages', { data: {id: 4, type: 'A', name: 'poppa doe'} });
 
             const results = await dba.find('messages', {
                 where: {
@@ -156,21 +157,18 @@ Object.keys(dbis).forEach(dbiName => {
             expect(results2.length).toEqual(4);
         });
 
-        xit('can use $like query', async () => {
-            const lists = { messages: {} };
-            const db1 = new DBI();
-            await db1.init({ lists });
-            await db1.create('messages', { data: {id: 1, type: 'A', name: 'john doe'} });
-            await db1.create('messages', { data: {id: 2, type: 'B', name: 'jane doe'} });
-            await db1.create('messages', { data: {id: 3, type: 'A', name: 'john sage'} });
-            await db1.create('messages', { data: {id: 4, type: 'C', name: 'jane sage'} });
+        it('can use $like query', async () => {
+            await dba.create('messages', { data: {id: 1, type: 'A', name: 'john doe'} });
+            await dba.create('messages', { data: {id: 2, type: 'B', name: 'jane doe'} });
+            await dba.create('messages', { data: {id: 3, type: 'A', name: 'john sage'} });
+            await dba.create('messages', { data: {id: 4, type: 'C', name: 'jane sage'} });
 
-            const results = await db1.find('messages', {
+            const results = await dba.find('messages', {
                 where: {
                     '$or': [
                         {
                             name: {
-                                '$like': 'sage'
+                                '$like': '%sage%'
                             }
                         }
                     ]
@@ -182,21 +180,18 @@ Object.keys(dbis).forEach(dbiName => {
             expect(results[1].name.indexOf('sage') > -1).toEqual(true);
         });
 
-        xit('can use $notLike X query', async () => {
-            const lists = { messages: {} };
-            const db1 = new DBI();
-            await db1.init({ lists });
-            await db1.create('messages', { data: {id: 1, type: 'A', name: 'john doe'} });
-            await db1.create('messages', { data: {id: 2, type: 'B', name: 'jane doe'} });
-            await db1.create('messages', { data: {id: 3, type: 'A', name: 'john sage'} });
-            await db1.create('messages', { data: {id: 4, type: 'C', name: 'jane sage'} });
+        it('can use $notLike X query', async () => {
+            await dba.create('messages', { data: {id: 1, type: 'A', name: 'john doe'} });
+            await dba.create('messages', { data: {id: 2, type: 'B', name: 'jane doe'} });
+            await dba.create('messages', { data: {id: 3, type: 'A', name: 'john sage'} });
+            await dba.create('messages', { data: {id: 4, type: 'C', name: 'jane sage'} });
 
-            const results = await db1.find('messages', {
+            const results = await dba.find('messages', {
                 where: {
                     '$or': [
                         {
                             name: {
-                                '$notLike': 'doe'
+                                '$notLike': '%doe%'
                             }
                         }
                     ]
@@ -208,16 +203,13 @@ Object.keys(dbis).forEach(dbiName => {
             expect(results[1].name.indexOf('sage') > -1).toEqual(true);
         });
 
-        xit('can use $gt/greater than query', async () => {
-            const lists = { messages: {} };
-            const db1 = new DBI();
-            await db1.init({ lists });
-            await db1.create('messages', { data: {id: 1, type: 'A', name: 'john doe'} });
-            await db1.create('messages', { data: {id: 2, type: 'B', name: 'jane doe'} });
-            await db1.create('messages', { data: {id: 3, type: 'A', name: 'john sage'} });
-            await db1.create('messages', { data: {id: 4, type: 'C', name: 'jane sage'} });
+        it('can use $gt/greater than query', async () => {
+            await dba.create('messages', { data: {id: 1, type: 'A', name: 'john doe'} });
+            await dba.create('messages', { data: {id: 2, type: 'B', name: 'jane doe'} });
+            await dba.create('messages', { data: {id: 3, type: 'A', name: 'john sage'} });
+            await dba.create('messages', { data: {id: 4, type: 'C', name: 'jane sage'} });
 
-            const results = await db1.find('messages', {
+            const results = await dba.find('messages', {
                 where: {
                     id: {
                         $gt: 2
@@ -230,16 +222,13 @@ Object.keys(dbis).forEach(dbiName => {
             expect(results[1].name.indexOf('sage') > -1).toEqual(true);
         });
 
-        xit('can use $gte/greater than or equals query', async () => {
-            const lists = { messages: {} };
-            const db1 = new DBI();
-            await db1.init({ lists });
-            await db1.create('messages', { data: {id: 1, type: 'A', name: 'john doe'} });
-            await db1.create('messages', { data: {id: 2, type: 'B', name: 'jane doe'} });
-            await db1.create('messages', { data: {id: 3, type: 'A', name: 'john sage'} });
-            await db1.create('messages', { data: {id: 4, type: 'C', name: 'jane sage'} });
+        it('can use $gte/greater than or equals query', async () => {
+            await dba.create('messages', { data: {id: 1, type: 'A', name: 'john doe'} });
+            await dba.create('messages', { data: {id: 2, type: 'B', name: 'jane doe'} });
+            await dba.create('messages', { data: {id: 3, type: 'A', name: 'john sage'} });
+            await dba.create('messages', { data: {id: 4, type: 'C', name: 'jane sage'} });
 
-            const results = await db1.find('messages', {
+            const results = await dba.find('messages', {
                 where: {
                     id: {
                         '$gte': 3
@@ -252,50 +241,41 @@ Object.keys(dbis).forEach(dbiName => {
             expect(results[1].name.indexOf('sage') > -1).toEqual(true);
         });
 
-        xit('can use a limit to tech x documents', async () => {
-            const lists = { messages: {} };
-            const db1 = new DBI();
-            await db1.init({ lists });
-            await db1.create('messages', { data: {id: 1, type: 'A', name: 'john doe'} });
-            await db1.create('messages', { data: {id: 2, type: 'B', name: 'jane doe'} });
-            await db1.create('messages', { data: {id: 3, type: 'A', name: 'john sage'} });
-            await db1.create('messages', { data: {id: 4, type: 'C', name: 'jane sage'} });
+        it('can use a limit to tech x documents', async () => {
+            await dba.create('messages', { data: {id: 1, type: 'A', name: 'john doe'} });
+            await dba.create('messages', { data: {id: 2, type: 'B', name: 'jane doe'} });
+            await dba.create('messages', { data: {id: 3, type: 'A', name: 'john sage'} });
+            await dba.create('messages', { data: {id: 4, type: 'C', name: 'jane sage'} });
 
-            const results = await db1.find('messages', {
+            const results = await dba.find('messages', {
                 limit: 2
             });
 
             expect(results.length).toEqual(2);
         });
 
-        xit('can use a offset to skip x documents', async () => {
-            const lists = { messages: {} };
-            const db1 = new DBI();
-            await db1.init({ lists });
-            await db1.create('messages', { data: {id: 1, type: 'A', name: 'john doe'} });
-            await db1.create('messages', { data: {id: 2, type: 'B', name: 'jane doe'} });
-            await db1.create('messages', { data: {id: 3, type: 'A', name: 'john sage'} });
-            await db1.create('messages', { data: {id: 4, type: 'C', name: 'jane sage'} });
-            await db1.create('messages', { data: {id: 5, type: 'D', name: 'Polly sage'} });
+        it('can use a offset to skip x documents', async () => {
+            await dba.create('messages', { data: {id: "1", type: 'A', name: 'john doe'} });
+            await dba.create('messages', { data: {id: "2", type: 'B', name: 'jane doe'} });
+            await dba.create('messages', { data: {id: "3", type: 'A', name: 'john sage'} });
+            await dba.create('messages', { data: {id: "4", type: 'C', name: 'jane sage'} });
+            await dba.create('messages', { data: {id: "5", type: 'D', name: 'Polly sage'} });
 
-            const results = await db1.find('messages', {
+            const results = await dba.find('messages', {
                 offset: 2
             });
 
             expect(results.length).toEqual(3);
-            expect(results[0].id).toEqual(3);
+            expect(results[0].id).toEqual("3");
         });
 
-        xit('can use $lt/lesser than query', async () => {
-            const lists = { messages: {} };
-            const db1 = new DBI();
-            await db1.init({ lists });
-            await db1.create('messages', { data: {id: 1, type: 'A', name: 'john doe'} });
-            await db1.create('messages', { data: {id: 2, type: 'B', name: 'jane doe'} });
-            await db1.create('messages', { data: {id: 3, type: 'A', name: 'john sage'} });
-            await db1.create('messages', { data: {id: 4, type: 'C', name: 'jane sage'} });
+        it('can use $lt/lesser than query', async () => {
+            await dba.create('messages', { data: {id: 1, type: 'A', name: 'john doe'} });
+            await dba.create('messages', { data: {id: 2, type: 'B', name: 'jane doe'} });
+            await dba.create('messages', { data: {id: 3, type: 'A', name: 'john sage'} });
+            await dba.create('messages', { data: {id: 4, type: 'C', name: 'jane sage'} });
 
-            const results = await db1.find('messages', {
+            const results = await dba.find('messages', {
                 where: {
                     id: {
                         '$lt': 3
@@ -308,16 +288,13 @@ Object.keys(dbis).forEach(dbiName => {
             expect(results[1].name.indexOf('doe') > -1).toEqual(true);
         });
 
-        xit('can use $lte/$lesser than or equals query', async () => {
-            const lists = { messages: {} };
-            const db1 = new DBI();
-            await db1.init({ lists });
-            await db1.create('messages', { data: {id: 1, type: 'A', name: 'john doe'} });
-            await db1.create('messages', { data: {id: 2, type: 'B', name: 'jane doe'} });
-            await db1.create('messages', { data: {id: 3, type: 'A', name: 'john sage'} });
-            await db1.create('messages', { data: {id: 4, type: 'C', name: 'jane sage'} });
+        it('can use $lte/$lesser than or equals query', async () => {
+            await dba.create('messages', { data: {id: 1, type: 'A', name: 'john doe'} });
+            await dba.create('messages', { data: {id: 2, type: 'B', name: 'jane doe'} });
+            await dba.create('messages', { data: {id: 3, type: 'A', name: 'john sage'} });
+            await dba.create('messages', { data: {id: 4, type: 'C', name: 'jane sage'} });
 
-            const results = await db1.find('messages', {
+            const results = await dba.find('messages', {
                 where: {
                     id: {
                         '$lte': 2
@@ -330,66 +307,51 @@ Object.keys(dbis).forEach(dbiName => {
             expect(results[1].name.indexOf('doe') > -1).toEqual(true);
         });
 
-        xit('can read multiple items in dbi with query', async () => {
-            const lists = { messages: {} };
-            const db1 = new DBI();
-            await db1.init({ lists });
-            await db1.create('messages', { data: {id: 1, type: 'A', name: 'john doe'} });
-            await db1.create('messages', { data: {id: 2, type: 'B', name: 'jane doe'} });
-            await db1.create('messages', { data: {id: 3, type: 'A', name: 'poppa doe'} });
+        it('can read multiple items in dbi with query', async () => {
+            await dba.create('messages', { data: {id: 1, type: 'A', name: 'john doe'} });
+            await dba.create('messages', { data: {id: 2, type: 'B', name: 'jane doe'} });
+            await dba.create('messages', { data: {id: 3, type: 'A', name: 'poppa doe'} });
 
-            const results = await db1.find('messages', { where: { type: 'A' }});
+            const results = await dba.find('messages', { where: { type: 'A' }});
             expect(results.length).toEqual(2);
         });
 
-        xit('can read multiple items in dbi without query', async () => {
-            const lists = { messages: {} };
-            const db1 = new DBI();
-            await db1.init({ lists });
-            await db1.create('messages', { data: {id: 1, type: 'A', name: 'john doe'} });
-            await db1.create('messages', { data: {id: 2, type: 'B', name: 'jane doe'} });
-            await db1.create('messages', { data: {id: 3, type: 'A', name: 'poppa doe'} });
+        it('can read multiple items in dbi without query', async () => {
+            await dba.create('messages', { data: {id: 1, type: 'A', name: 'john doe'} });
+            await dba.create('messages', { data: {id: 2, type: 'B', name: 'jane doe'} });
+            await dba.create('messages', { data: {id: 3, type: 'A', name: 'poppa doe'} });
 
-            const results = await db1.find('messages');
+            const results = await dba.find('messages');
             expect(results.length).toEqual(3);
         });
 
-        xit('can update an item', async () => {
-            const lists = { messages: {} };
-            const db1 = new DBI();
-            await db1.init({ lists });
-            await db1.create('messages', { data: {id: 1, name: 'john doe'} });
+        it('can update an item', async () => {
+            await dba.create('messages', { data: {id: 1, name: 'john doe'} });
 
-            const result = await db1.updateOne('messages', { where: {id: 1}, data: {name: 'jane doe'} });
+            const result = await dba.updateOne('messages', { where: {id: 1}, data: {name: 'jane doe'} });
             expect(result).toBeTruthy();
 
-            const results2 = await db1.findOne('messages', { where: { id: 1 } });
+            const results2 = await dba.findOne('messages', { where: { id: 1 } });
             expect(results2.name).toEqual('jane doe');
         });
 
-        xit('can update multiple items', async () => {
-            const lists = { messages: {} };
-            const db1 = new DBI();
-            await db1.init({ lists });
-            await db1.create('messages', { data: {id: 1, type: 'a', name: 'john doe'} });
-            await db1.create('messages', { data: {id: 2, type: 'a', name: 'john doe'} });
+        it('can update multiple items', async () => {
+            await dba.create('messages', { data: {id: 1, type: 'a', name: 'john doe'} });
+            await dba.create('messages', { data: {id: 2, type: 'a', name: 'john doe'} });
 
-            const result = await db1.updateMany('messages', { where: {type: 'a'}, data: { updated: true } });
+            const result = await dba.updateMany('messages', { where: {type: 'a'}, data: { updated: true } });
             expect(result).toBeTruthy();
 
-            const results2 = await db1.find('messages', { where: { type: 'a' } });
-            expect(results2[0].updated).toEqual(true);
-            expect(results2[1].updated).toEqual(true);
+            const results2 = await dba.find('messages', { where: { type: 'a' } });
+            expect(results2[0].updated).toBeTruthy();
+            expect(results2[1].updated).toBeTruthy();
         });
 
         xit('can delete an item', async () => {
-            const lists = { messages: {} };
-            const db1 = new DBI();
-            await db1.init({ lists });
-            await db1.create('messages', { data: {id: 1, name: 'john doe'} });
+            await dba.create('messages', { data: {id: 1, name: 'john doe'} });
 
-            await db1.delete('messages', { where: {id: 1} });
-            const res = await db1.find('messages', { where: {} });
+            await dba.delete('messages', { where: {id: 1} });
+            const res = await dba.find('messages', { where: {} });
             expect(res.length).toEqual(0);
         });
 
