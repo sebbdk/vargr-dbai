@@ -84,7 +84,13 @@ module.exports = class {
 
     async createCollection(collectionName, { initialItems = [], modelDef }) {
         if(modelDef && !this.collections[collectionName]) {
-            this.collections[collectionName] = this.db.define(collectionName, modelDef);
+            this.collections[collectionName] = this.db.define(collectionName, modelDef, {
+                freezeTableName: true,
+                name: {
+                    plural: collectionName,
+                    singular: collectionName
+                }
+            });
         }
 
         if (this.collections[collectionName]) {
@@ -116,13 +122,33 @@ module.exports = class {
 
     async find(listName, { where = {}, limit, offset, include =  false } = {}) {
         try {
-            const res = await this.collections[listName].findAll({
+            const fixedInclude = Object.keys(include).reduce((acc, val) => {
+                return [
+                    ...acc,
+                    {
+                        model: this.collections[val],
+                        required: include[val].required ? true : false
+                    }
+                ]
+            }, []);
+
+            let res = await this.collections[listName].findAll({
                 where,
                 limit,
                 offset,
-                raw: true
+                include: fixedInclude,
+                //raw: true,
+                nest: true
             });
-    
+
+            res = await res.map(el => el.get({ plain: true }))
+
+            Object.keys(include).forEach(key => {
+                res.map(subRes => {
+                    subRes[key] = Array.isArray(subRes[key]) ? subRes[key] : [subRes[key]];
+                })
+            });
+
             return res;
         } catch(error) {
             console.error(error);
@@ -132,12 +158,30 @@ module.exports = class {
     }
 
     async findOne(listName, { where = {}, limit, offset, include =  false } = {}) {
-        const res = await this.collections[listName].findOne({
+        const fixedInclude = Object.keys(include).reduce((acc, val) => {
+            return [
+                ...acc,
+                {
+                    model: this.collections[val],
+                    required: include[val].required
+                }
+            ]
+        }, []);
+
+        let res = await this.collections[listName].findOne({
             where,
             limit,
             offset,
-            raw: true
+            include: fixedInclude,
+            //raw: true,
+            nest: true
         });
+
+        res = await res.get({ plain: true })
+
+        Object.keys(include).forEach(key => {
+            res[key] = Array.isArray(res[key]) ? res[key] : [res[key]];
+        })
 
         return res;
     }

@@ -135,11 +135,7 @@ module.exports = class {
                         }, {});
                     }
 
-                    console.log(subListName, subQuery)
-
                     result[subListName] = await this.find(subListName, { where: subQuery });
-
-                    console.log(result[subListName])
                 }));
 
                 // Handle required: true, basically right joins the results.

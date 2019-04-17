@@ -26,9 +26,10 @@ const initializers = {
                     primaryKey: true
                 },
                 abc:Sequelize.STRING,
-                user_id: Sequelize.UUID,
+                users_id: Sequelize.UUID,
                 type: Sequelize.STRING,
                 name: Sequelize.STRING,
+                message: Sequelize.STRING,
                 updated: Sequelize.BOOLEAN
             },
             users: {
@@ -37,7 +38,7 @@ const initializers = {
                     defaultValue: Sequelize.UUIDV1,
                     primaryKey: true
                 },
-                abc:Sequelize.STRING,
+                abc: Sequelize.STRING,
                 type: Sequelize.STRING,
                 name: Sequelize.STRING,
             }
@@ -45,8 +46,15 @@ const initializers = {
         associations: {
             messages: {
                 belongsTo: {
-                    foreignKey: 'user_id',
-                    model: 'users'
+                    foreignKey: 'users_id',
+                    model: 'users',
+                    as: 'cats'
+                }
+            },
+            users: {
+                hasMany: {
+                    foreignKey: 'users_id',
+                    model: 'messages'
                 }
             }
         }
@@ -69,6 +77,7 @@ Object.keys(dbis).forEach(dbiName => {
         afterEach(async () => {
             try {
                 await dba.removeCollection('messages');
+                await dba.removeCollection('users');
             } catch(e) {}
         });
 
@@ -365,102 +374,85 @@ Object.keys(dbis).forEach(dbiName => {
         });
 
         it('can read a single item and left join data from another lists', async () => {
-            await dba.create('messages', { data: { id: 1, user_id: 2, message: 'I like popsicles' } });
+            await dba.create('messages', { data: { id: 1, users_id: 2, message: 'I like popsicles' } });
             await dba.create('users', { data: {id: 2, name: 'jane doe'} });
 
             const result = await dba.findOne('messages', {
                 where: { id: 1 },
                 include: {
                     users: {
-                        on: { 'user_id': 'id' }
+                        on: { 'users_id': 'id' }
                     }
                 }
             });
 
             expect(Array.isArray(result.users)).toEqual(true);
-            expect(result.users[0].id).toEqual(2);
+            expect(result.users[0].name).toEqual('jane doe');
         });
 
-        xit('can read multiple items and left join data from another lists', async () => {
-            await dba.create('messages', { data: {id: 1, user_id: 1, message: 'cakes are awesome'} });
-            await dba.create('messages', { data: {id: 2, user_id: 2, message: 'I like popsicles'} });
-            await dba.create('leftusers', { data: {id: 1, name: 'jane joe'} });
-            await dba.create('leftusers', { data: {id: 2, name: 'Poppa joe'} });
+        it('can read multiple items and left join data from another lists', async () => {
+            await dba.create('messages', { data: {id: 1, users_id: 1, message: 'cakes are awesome'} });
+            await dba.create('messages', { data: {id: 2, users_id: 2, message: 'I like popsicles'} });
+            await dba.create('users', { data: {id: 1, name: 'jane joe'} });
+            await dba.create('users', { data: {id: 2, name: 'Poppa joe'} });
 
-            const result = await db1.find('messages', {
+            const result = await dba.find('messages', {
                 include: {
-                    leftusers: {
-                        on: { 'user_id': 'id' }
+                    users: {
+                        on: { 'users_id': 'id' }
                     }
                 }
             });
 
-            expect(Array.isArray(result[0].leftusers)).toEqual(true);
-            expect(result[0].leftusers[0].id).toEqual(1);
-
-            await dba.removeCollection('leftusers');
+            expect(Array.isArray(result[0].users)).toEqual(true);
+            expect(result[0].users[0].name).toEqual('jane joe');
         });
 
-        xit('can read multiple items and right join data from another lists', async () => {
-            const lists = { messages: {}, rightusers: {} };
-            const db1 = new DBI();
-            await db1.init({ lists });
-            await db1.create('messages', { data: {id: 1, user_id: 1, message: 'cakes are awesome'} });
-            await db1.create('messages', { data: {id: 2, user_id: 2, message: 'I like popsicles'} });
-            await db1.create('rightusers', { data: {id: 2, name: 'Poppa joe'} });
+        it('can read multiple items and right join data from another lists', async () => {
+            await dba.create('messages', { data: {id: 1, users_id: 1, message: 'cakes are awesome'} });
+            await dba.create('messages', { data: {id: 2, users_id: 2, message: 'I like popsicles'} });
+            await dba.create('users', { data: {id: 2, name: 'Poppa joe'} });
 
-            const result = await db1.find('messages', {
+            const result = await dba.find('messages', {
                 include: {
-                    rightusers: {
-                        on: { 'user_id': 'id' },
+                    users: {
+                        on: { 'users_id': 'id' },
                         required: true
                     }
                 }
             });
 
-            expect(Array.isArray(result[0].rightusers)).toEqual(true);
-            expect(result[0].rightusers[0].id).toEqual(2);
+            expect(Array.isArray(result[0].users)).toEqual(true);
+            expect(result[0].users[0].name).toEqual('Poppa joe');
             expect(result.length).toEqual(1);
-
-            await dba.removeCollection('rightusers');
         });
 
-        xit('will assume join type on when including a child list', async () => {
-            const lists = { messages: {}, humans: {} };
-            const db1 = new DBI();
-            await db1.init({ lists });
-            await db1.create('humans', { data: {id: 2, name: 'Poppa joe'} });
-            await db1.create('messages', { data: {id: 1, humans_id: 2, message: 'cakes are awesome'} });
-            await db1.create('messages', { data: {id: 2, humans_id: 2, message: 'I like popsicles'} });
+        it('will assume join type on when including a child list', async () => {
+            await dba.create('users', { data: {id: 2, name: 'Poppa joe'} });
+            await dba.create('messages', { data: {id: 1, users_id: 2, message: 'cakes are awesome'} });
+            await dba.create('messages', { data: {id: 2, users_id: 2, message: 'I like popsicles'} });
 
-            const result = await db1.find('humans', {
+            const result = await dba.find('users', {
                 include: { messages: {} }
             });
 
             expect(Array.isArray(result[0].messages)).toEqual(true);
             expect(result[0].messages.length).toEqual(2);
-            expect(result[0].messages[0].humans_id).toEqual(2);
-
-            await dba.removeCollection('humans');
+            expect(result[0].messages[0].message).toEqual('cakes are awesome');
         });
 
-        xit('will assume join type when a child list includes a parent list', async () => {
-            const lists = { messages: {}, users: {} };
-            const db1 = new DBI();
-            await db1.init({ lists });
-            await db1.create('messages', { data: {id: 1, users_id: 1, message: 'cakes are awesome'} });
-            await db1.create('messages', { data: {id: 2, users_id: 2, message: 'I like popsicles'} });
-            await db1.create('users', { data: {id: 2, name: 'Poppa joe'} });
+        it('will assume join type when a child list includes a parent list', async () => {
+            await dba.create('messages', { data: {id: 1, users_id: 1, message: 'cakes are awesome'} });
+            await dba.create('messages', { data: {id: 2, users_id: 2, message: 'I like popsicles'} });
+            await dba.create('users', { data: {id: 2, name: 'Poppa joe'} });
 
-            const result = await db1.find('messages', {
+            const result = await dba.find('messages', {
                 include: { users: { } }
             });
 
             expect(Array.isArray(result[1].users)).toEqual(true);
-            expect(result[1].users[0].id).toEqual(2);
+            expect(result[1].users[0].name).toEqual("Poppa joe");
             expect(result.length).toEqual(2);
-
-            await dba.removeCollection('users');
         });
 
         it('can close connection gracefully', async () => {
