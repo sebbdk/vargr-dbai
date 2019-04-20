@@ -1,33 +1,22 @@
-# Vargr Debai
+# Vargr DBai
 
-**This is still very much in alpha**
+One API, all the databases
 
-This is a library of DB abstration interfaces written to quickly prototype CRUD API applications.
-All interfaces are written with a common test suite, so have the same API regardless of what DB is behind it.
+This is a simplified API that allows one to do all common CRUD methods on a variaty of databases using the same API.
+This is not and ORM, or a query builder, but has features from both.
 
-# Why?
-There are other database abstractions out there, knex/objection, sequalize, bookshelf.
-They only support SQL based databases however.
+The gain is the abillity to write generic layers for Auth, Rest, Validation etc. will work across databases.
+The price, is an overhead in translating queries and results, as well as not being able to do complex queries.
 
-I would lgike a library that will let me prototype common CRUD applications and use any storage.
+So
 
-*Usecases:*
-* Prototype using database type A and then switch database type B when things get serious.
-* Change you database later from SQL based to a NoSQL like Elasticsearch for fx. search performance.
-* Have one database type for local development, fx. in memory, and another on live.
-* Easy query duplication since the interface is the same across databases.
-
-*Things to consider before using this library*
-* Some specilized queries are not possible, since not all features are shared across database types.
-* There is a slight performance-overhead in translating queries to fit the shared test requirements.
-
-## Supported storage / databases
+## Supported storages / databases
 * LowDB
 * MongoDB
 * Sequalize (Postgres, MySQL, MariaDB, SQLite and Microsoft SQL Server)
+* Knex
 
 ## Todo:
-* Knex integration (Sequalize requires a large amount of config, which we might be able to avoid using knex)
 * Sort find....
 * Use symbols instead of strings for query operations ($or, $like, et..)
 * Documentation
