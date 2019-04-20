@@ -71,7 +71,7 @@ module.exports = class {
         });
     }
 
-    async find(listName, { offset = 0, limit = 20, where, include } = {}) {
+    async find(listName, { offset = 0, limit = 20, where, include, orderBy } = {}) {
         const offsetLimit = offset + limit;
 
         let results = this.db
@@ -107,8 +107,12 @@ module.exports = class {
                 return match ;
             })
             .slice(offset, offsetLimit)
-            .value();
 
+        if (orderBy) {
+            results = results.orderBy(orderBy[0], orderBy[1]);
+        }
+
+        results = results.value();
 
         // @todo Move to method
         if (include !== undefined) {

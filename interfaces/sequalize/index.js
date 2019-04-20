@@ -120,7 +120,7 @@ module.exports = class {
     };
 
 
-    async find(listName, { where = {}, limit, offset, include =  false } = {}) {
+    async find(listName, { where = {}, limit, offset, include =  false, orderBy } = {}) {
         try {
             const fixedInclude = Object.keys(include).reduce((acc, val) => {
                 return [
@@ -136,6 +136,7 @@ module.exports = class {
                 where,
                 limit,
                 offset,
+                order: orderBy ? [ orderBy ] : undefined,
                 include: fixedInclude,
                 //raw: true,
                 nest: true

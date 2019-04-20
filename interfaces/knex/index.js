@@ -46,7 +46,7 @@ module.exports = class {
         return await this.db.schema.dropTable(collectionName)
     }
 
-    async find(listName, { where = {}, limit, offset, include =  false } = {}) {
+    async find(listName, { where = {}, limit, offset, include =  false, orderBy } = {}) {
         let or = false;
         if(where.$or) {
             or = where.$or
@@ -101,6 +101,10 @@ module.exports = class {
                     });
                 });
             })
+        }
+
+        if(orderBy) {
+            res.orderBy(orderBy[0], orderBy[1]);
         }
 
         if(include) { // handle right joins

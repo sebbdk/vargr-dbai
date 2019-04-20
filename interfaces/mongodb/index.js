@@ -127,7 +127,6 @@ module.exports = class {
     async removeCollection(listName) {
         return new Promise((resolve) => {
             this.db.collection(listName).drop((err, delOK) => {
-                if (err) throw err;
                 resolve(delOK);
             });
         });
@@ -143,10 +142,17 @@ module.exports = class {
         }
     }
 
-    async find(listName, { where = {}, limit, offset, include =  false } = {}) {
+    async find(listName, { where = {}, limit, offset, include =  false, orderBy } = {}) {
         const fixedWhere = convertWhereToMongo(where);
+        let order = [];
+        if(orderBy) {
+            const dir = orderBy[1] == 'asc' ? 1:-1;
+            order = (orderBy ? [{ $sort: { [orderBy[0]]: dir } }] : []);
+        }
+
         const aggregateOptions = [
             { $match: fixedWhere },
+            ...order
         ];
 
         if (include) {

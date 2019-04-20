@@ -1,9 +1,9 @@
 const Sequelize = require('Sequelize');
 
 const dbis = {
-    //lowdDB: require('./lowdb'),
-    //mongodb: require('./mongodb'),
-    //sequalize: require('./sequalize'),
+    lowdDB: require('./lowdb'),
+    mongodb: require('./mongodb'),
+    sequalize: require('./sequalize'),
     knex: require('./knex')
 };
 
@@ -30,6 +30,7 @@ const initializers = {
                 users_id: Sequelize.UUID,
                 type: Sequelize.STRING,
                 name: Sequelize.STRING,
+                order: Sequelize.INTEGER,
                 message: Sequelize.STRING,
                 updated: Sequelize.BOOLEAN
             },
@@ -83,6 +84,7 @@ const messageDef = {
     type: 'string',
     name: 'string',
     message: 'string',
+    order: 'integer',
     updated: 'boolean'
 }
 
@@ -189,8 +191,46 @@ Object.keys(dbis).forEach(dbiName => {
             expect(result.length).toEqual(3);
         });
 
-        xit('can sort found items', async () => {
-            // #TODO
+        it('can sort found items numerically', async () => {
+            await dba.create('messages', { data: {id: 1, order: 3, name: 'john doe'} });
+            await dba.create('messages', { data: {id: 2, order: 1, name: 'jane doe'} });
+            await dba.create('messages', { data: {id: 3, order: 2, name: 'poppa doe'} });
+
+            const result = await dba.find('messages', {
+                orderBy: ['order', 'asc']
+            });
+
+            expect(result[0].order).toEqual(1);
+            expect(result[1].order).toEqual(2);
+            expect(result[2].order).toEqual(3);
+        });
+
+        it('can sort found items alphabetically', async () => {
+            await dba.create('messages', { data: {id: 1, order: 3, name: 'B'} });
+            await dba.create('messages', { data: {id: 2, order: 1, name: 'C'} });
+            await dba.create('messages', { data: {id: 3, order: 2, name: 'A'} });
+
+            const result = await dba.find('messages', {
+                orderBy: ['name', 'asc']
+            });
+
+            expect(result[0].name).toEqual("A");
+            expect(result[1].name).toEqual("B");
+            expect(result[2].name).toEqual("C");
+        });
+
+        it('can sort descending', async () => {
+            await dba.create('messages', { data: {id: 1, order: 3, name: 'john doe'} });
+            await dba.create('messages', { data: {id: 2, order: 1, name: 'jane doe'} });
+            await dba.create('messages', { data: {id: 3, order: 2, name: 'poppa doe'} });
+
+            const result = await dba.find('messages', {
+                orderBy: ['order', 'desc']
+            });
+
+            expect(result[0].order).toEqual(3);
+            expect(result[1].order).toEqual(2);
+            expect(result[2].order).toEqual(1);
         });
 
         it('can use $OR query', async () => {

@@ -10,14 +10,13 @@ The price, is an overhead in translating queries and results, as well as not bei
 
 So
 
-## Supported storages / databases
+## Supported storage libraries/databases
 * LowDB
 * MongoDB
 * Sequalize (Postgres, MySQL, MariaDB, SQLite and Microsoft SQL Server)
-* Knex
+* Knex (Postgres, MySQL, MariaDB, SQLite and Microsoft SQL Server)
 
 ## Todo:
-* Sort find....
 * Use symbols instead of strings for query operations ($or, $like, et..)
 * Documentation
 * Test suite refactor
