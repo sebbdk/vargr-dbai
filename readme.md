@@ -9,7 +9,7 @@ All interfaces are written with a common test suite, so have the same API regard
 There are other database abstractions out there, knex/objection, sequalize, bookshelf.
 They only support SQL based databases however.
 
-I would like a library that will let me prototype common CRUD applications and use any storage.
+I would lgike a library that will let me prototype common CRUD applications and use any storage.
 
 *Usecases:*
 * Prototype using database type A and then switch database type B when things get serious.
@@ -28,6 +28,8 @@ I would like a library that will let me prototype common CRUD applications and u
 
 ## Todo:
 * Knex integration (Sequalize requires a large amount of config, which we might be able to avoid using knex)
+* Sort find....
+* Use symbols instead of strings for query operations ($or, $like, et..)
 * Documentation
 * Test suite refactor
 * More tests

@@ -17,6 +17,7 @@ module.exports = class {
     }
 
     async createCollection(collectionName, { initialItems = [], modelDef }) {
+        this.collectionDefs[collectionName] = modelDef;
         return new Promise(async (resolve, reject) => {
             const exists = await this.db.schema.hasTable(collectionName);
             if(!exists) {
@@ -46,22 +47,124 @@ module.exports = class {
     }
 
     async find(listName, { where = {}, limit, offset, include =  false } = {}) {
-        let res = this.db
-                .select()
-                .from(listName)
-                .where(where);
+        let or = false;
+        if(where.$or) {
+            or = where.$or
+            delete where.$or;
+        }
 
-        if(limit) {
+        let res = this.db
+            .from(listName)
+
+        const whereMethods = {
+            $like: (fieldName, fieldVal, ref) => { ref.where(fieldName, 'like', fieldVal.$like) },
+            $notLike: (fieldName, fieldVal, ref) => { ref.whereNot(fieldName, 'like', fieldVal.$notLike) },
+            $gt: (fieldName, fieldVal, ref) => { ref.where(fieldName, '>', fieldVal.$gt) },
+            $gte: (fieldName, fieldVal, ref) => { ref.where(fieldName, '>=', fieldVal.$gte) },
+            $lt: (fieldName, fieldVal, ref) => { ref.where(fieldName, '<', fieldVal.$lt) },
+            $lte: (fieldName, fieldVal, ref) => { ref.where(fieldName, '<=', fieldVal.$lte) },
+            $in: (fieldName, fieldVal, ref) => { ref.whereIn(fieldName, fieldVal.$in) },
+        }
+
+        function covert(fieldName, fieldVal, ref) {
+            if(typeof(fieldVal) !== 'object') {
+                ref.where(listName+'.'+fieldName, fieldVal);
+            } else {
+                Object.keys(whereMethods).forEach((meth) => {
+                    if (fieldVal[meth] !== undefined) {
+                        whereMethods[meth](listName+'.'+fieldName, fieldVal, ref);
+                    }
+                });
+            }
+        }
+
+        Object.keys(where).forEach((key) => {
+            covert(key, where[key], res);
+        });
+
+        if(limit !== undefined) {
            res.limit(limit);
         }
 
-        await res.where(where);
+        if(offset) {
+            res.offset(offset);
+        }
 
-        const objectMap = res.map((row) => {
+        if(or) {
+            or.forEach(orCond => {
+                Object.keys(orCond).forEach((key) => {
+                    res.orWhere(function() {
+                        covert(key, orCond[key], this);
+                        Object.keys(where).forEach((key) => {
+                            covert(key, where[key], this);
+                        });
+                    });
+                });
+            })
+        }
+
+        if(include) { // handle right joins
+            Object.keys(include).forEach(key => {
+                if (include[key].on && include[key].required) {
+                    const onKey = Object.keys(include[key].on).pop();
+                    const fKey = key+"."+include[key].on[onKey];
+                    const lKey = listName+"."+onKey;
+
+                    res.rightJoin(key, {[lKey]: fKey});
+                }
+            });
+        }
+
+        let fields = undefined;
+
+        if (include) { // Prevent right join data by specifying fields
+            fields = [];
+            Object.keys(this.collectionDefs[listName]).forEach(key => {
+                //fields.push(`${listName}.${key} as ${listName}.${key}`)
+                fields.push(`${listName}.${key} as ${key}`);
+            });
+        }
+
+        const fres = await res.select(fields);
+
+        const objectMap = fres.map((row) => {
             return Object.keys(row).reduce((acc, val) => {
-                return { ...acc, [val]:row[val] }
+                return {
+                    ...acc,
+                    [val]:row[val]
+                }
             }, {});
         });
+
+        if(include) { // find and add join/include data
+            const includeKeys = Object.keys(include);
+            for(let i = 0; i < includeKeys.length; i++) {
+                const key = includeKeys[i];
+                let lKey = `id`;
+                let fKey = `${listName}_id`;
+                if (include[key].on) {
+                    const onKey = Object.keys(include[key].on).pop();
+
+                    // switch these two if, fKey exists on local model definition
+                    fKey = include[key].on[onKey];
+                    lKey = onKey;
+                }
+
+                const lKeys = objectMap.map(item => item[lKey])
+
+                const subResults = await this.find(includeKeys[i], {
+                    where: {
+                        [fKey]:{
+                            $in: lKeys
+                        }
+                    }
+                });
+
+                objectMap.map(item => {
+                    return item[includeKeys[i]] = subResults.filter(i => i[fKey] == item[lKey]);
+                });
+            }
+        }
 
         return objectMap;
     };
@@ -77,7 +180,22 @@ module.exports = class {
         return res.pop();
     };
 
-    async updateOne(listName, { data = {}, where = {}} = {})  { console.log('missing updateOne method') };
-    async updateMany(listName, { data = {}, where = {}} = {})  { console.log('missing updateMany method') };
-    async delete(listName, { where })  { console.log('missing delete method') };
+    async updateOne(listName, { data = {}, where = {}} = {})  {
+        return await this.db(listName)
+            .where(where)
+            .limit(1)
+            .update(data)
+    };
+
+    async updateMany(listName, { data = {}, where = {}} = {})  {
+        return await this.db(listName)
+            .where(where)
+            .update(data)
+    };
+
+    async delete(listName, { where })  {
+        return await this.db(listName)
+            .where(where)
+            .del()
+    };
 };

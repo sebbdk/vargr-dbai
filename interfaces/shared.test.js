@@ -92,8 +92,8 @@ const usersDef = {
         primaryKey: true
     },
     abc: 'string',
-    type: 'string',
-    name: 'string'
+    name: 'string',
+    type: 'string'
 }
 
 Object.keys(dbis).forEach(dbiName => {
@@ -170,7 +170,7 @@ Object.keys(dbis).forEach(dbiName => {
             expect(resultChecks.length).toEqual(2);
         });
 
-        it('can read a single item', async () => {
+        it('can find a single item', async () => {
             await dba.create('messages', { data: {id: 1, name: 'john doe'} });
             await dba.create('messages', { data: {id: 2, name: 'jane doe'} });
             await dba.create('messages', { data: {id: 3, name: 'poppa doe'} });
@@ -189,7 +189,11 @@ Object.keys(dbis).forEach(dbiName => {
             expect(result.length).toEqual(3);
         });
 
-        xit('can use $OR query', async () => {
+        xit('can sort found items', async () => {
+            // #TODO
+        });
+
+        it('can use $OR query', async () => {
             await dba.create('messages', { data: {id: 1, type: 'B', name: 'john doe'} });
             await dba.create('messages', { data: {id: 2, type: 'B', name: 'jane doe'} });
             await dba.create('messages', { data: {id: 3, type: 'A', name: 'poppa doe'} });
@@ -204,6 +208,7 @@ Object.keys(dbis).forEach(dbiName => {
                     ]
                 }
             });
+
             expect(results.length).toEqual(1);
 
             const results2 = await dba.find('messages', {
@@ -218,7 +223,7 @@ Object.keys(dbis).forEach(dbiName => {
             expect(results2.length).toEqual(4);
         });
 
-        xit('can use $like query', async () => {
+        it('can use $like query', async () => {
             await dba.create('messages', { data: {id: 1, type: 'A', name: 'john doe'} });
             await dba.create('messages', { data: {id: 2, type: 'B', name: 'jane doe'} });
             await dba.create('messages', { data: {id: 3, type: 'A', name: 'john sage'} });
@@ -241,7 +246,7 @@ Object.keys(dbis).forEach(dbiName => {
             expect(results[1].name.indexOf('sage') > -1).toEqual(true);
         });
 
-        xit('can use $notLike X query', async () => {
+        it('can use $notLike X query', async () => {
             await dba.create('messages', { data: {id: 1, type: 'A', name: 'john doe'} });
             await dba.create('messages', { data: {id: 2, type: 'B', name: 'jane doe'} });
             await dba.create('messages', { data: {id: 3, type: 'A', name: 'john sage'} });
@@ -264,7 +269,7 @@ Object.keys(dbis).forEach(dbiName => {
             expect(results[1].name.indexOf('sage') > -1).toEqual(true);
         });
 
-        xit('can use $gt/greater than query', async () => {
+        it('can use $gt/greater than query', async () => {
             await dba.create('messages', { data: {id: 1, type: 'A', name: 'john doe'} });
             await dba.create('messages', { data: {id: 2, type: 'B', name: 'jane doe'} });
             await dba.create('messages', { data: {id: 3, type: 'A', name: 'john sage'} });
@@ -283,7 +288,7 @@ Object.keys(dbis).forEach(dbiName => {
             expect(results[1].name.indexOf('sage') > -1).toEqual(true);
         });
 
-        xit('can use $gte/greater than or equals query', async () => {
+        it('can use $gte/greater than or equals query', async () => {
             await dba.create('messages', { data: {id: 1, type: 'A', name: 'john doe'} });
             await dba.create('messages', { data: {id: 2, type: 'B', name: 'jane doe'} });
             await dba.create('messages', { data: {id: 3, type: 'A', name: 'john sage'} });
@@ -302,35 +307,7 @@ Object.keys(dbis).forEach(dbiName => {
             expect(results[1].name.indexOf('sage') > -1).toEqual(true);
         });
 
-        xit('can use a limit to tech x documents', async () => {
-            await dba.create('messages', { data: {id: 1, type: 'A', name: 'john doe'} });
-            await dba.create('messages', { data: {id: 2, type: 'B', name: 'jane doe'} });
-            await dba.create('messages', { data: {id: 3, type: 'A', name: 'john sage'} });
-            await dba.create('messages', { data: {id: 4, type: 'C', name: 'jane sage'} });
-
-            const results = await dba.find('messages', {
-                limit: 2
-            });
-
-            expect(results.length).toEqual(2);
-        });
-
-        xit('can use a offset to skip x documents', async () => {
-            await dba.create('messages', { data: {id: "1", type: 'A', name: 'john doe'} });
-            await dba.create('messages', { data: {id: "2", type: 'B', name: 'jane doe'} });
-            await dba.create('messages', { data: {id: "3", type: 'A', name: 'john sage'} });
-            await dba.create('messages', { data: {id: "4", type: 'C', name: 'jane sage'} });
-            await dba.create('messages', { data: {id: "5", type: 'D', name: 'Polly sage'} });
-
-            const results = await dba.find('messages', {
-                offset: 2
-            });
-
-            expect(results.length).toEqual(3);
-            expect(results[0].id).toEqual("3");
-        });
-
-        xit('can use $lt/lesser than query', async () => {
+        it('can use $lt/lesser than query', async () => {
             await dba.create('messages', { data: {id: 1, type: 'A', name: 'john doe'} });
             await dba.create('messages', { data: {id: 2, type: 'B', name: 'jane doe'} });
             await dba.create('messages', { data: {id: 3, type: 'A', name: 'john sage'} });
@@ -349,7 +326,7 @@ Object.keys(dbis).forEach(dbiName => {
             expect(results[1].name.indexOf('doe') > -1).toEqual(true);
         });
 
-        xit('can use $lte/$lesser than or equals query', async () => {
+        it('can use $lte/$lesser than or equals query', async () => {
             await dba.create('messages', { data: {id: 1, type: 'A', name: 'john doe'} });
             await dba.create('messages', { data: {id: 2, type: 'B', name: 'jane doe'} });
             await dba.create('messages', { data: {id: 3, type: 'A', name: 'john sage'} });
@@ -368,7 +345,35 @@ Object.keys(dbis).forEach(dbiName => {
             expect(results[1].name.indexOf('doe') > -1).toEqual(true);
         });
 
-        xit('can read multiple items in dbi with query', async () => {
+        it('can use a limit to tech x documents', async () => {
+            await dba.create('messages', { data: {id: 1, type: 'A', name: 'john doe'} });
+            await dba.create('messages', { data: {id: 2, type: 'B', name: 'jane doe'} });
+            await dba.create('messages', { data: {id: 3, type: 'A', name: 'john sage'} });
+            await dba.create('messages', { data: {id: 4, type: 'C', name: 'jane sage'} });
+
+            const results = await dba.find('messages', {
+                limit: 2
+            });
+
+            expect(results.length).toEqual(2);
+        });
+
+        it('can use a offset to skip x documents', async () => {
+            await dba.create('messages', { data: {id: "1", type: 'A', name: 'john doe'} });
+            await dba.create('messages', { data: {id: "2", type: 'B', name: 'jane doe'} });
+            await dba.create('messages', { data: {id: "3", type: 'A', name: 'john sage'} });
+            await dba.create('messages', { data: {id: "4", type: 'C', name: 'jane sage'} });
+            await dba.create('messages', { data: {id: "5", type: 'D', name: 'Polly sage'} });
+
+            const results = await dba.find('messages', {
+                offset: 2
+            });
+
+            expect(results.length).toEqual(3);
+            expect(results[0].id).toEqual("3");
+        });
+
+        it('can read multiple items in dbi with query', async () => {
             await dba.create('messages', { data: {id: 1, type: 'A', name: 'john doe'} });
             await dba.create('messages', { data: {id: 2, type: 'B', name: 'jane doe'} });
             await dba.create('messages', { data: {id: 3, type: 'A', name: 'poppa doe'} });
@@ -377,7 +382,7 @@ Object.keys(dbis).forEach(dbiName => {
             expect(results.length).toEqual(2);
         });
 
-        xit('can read multiple items in dbi without query', async () => {
+        it('can read multiple items in dbi without query', async () => {
             await dba.create('messages', { data: {id: 1, type: 'A', name: 'john doe'} });
             await dba.create('messages', { data: {id: 2, type: 'B', name: 'jane doe'} });
             await dba.create('messages', { data: {id: 3, type: 'A', name: 'poppa doe'} });
@@ -396,7 +401,7 @@ Object.keys(dbis).forEach(dbiName => {
             expect(results2.name).toEqual('jane doe');
         });
 
-        xit('can update multiple items', async () => {
+        it('can update multiple items', async () => {
             await dba.create('messages', { data: {id: 1, type: 'a', name: 'john doe'} });
             await dba.create('messages', { data: {id: 2, type: 'a', name: 'john doe'} });
 
@@ -408,7 +413,7 @@ Object.keys(dbis).forEach(dbiName => {
             expect(results2[1].updated).toBeTruthy();
         });
 
-        xit('can delete an item', async () => {
+        it('can delete an item', async () => {
             await dba.create('messages', { data: {id: 1, name: 'john doe'} });
 
             await dba.delete('messages', { where: {id: 1} });
@@ -416,7 +421,7 @@ Object.keys(dbis).forEach(dbiName => {
             expect(res.length).toEqual(0);
         });
 
-        xit('can read a single item and left join data from another lists', async () => {
+        it('can read a single item and left join data from another lists', async () => {
             await dba.create('messages', { data: { id: 1, users_id: 2, message: 'I like popsicles' } });
             await dba.create('users', { data: {id: 2, name: 'jane doe'} });
 
@@ -433,7 +438,7 @@ Object.keys(dbis).forEach(dbiName => {
             expect(result.users[0].name).toEqual('jane doe');
         });
 
-        xit('can read multiple items and left join data from another lists', async () => {
+        it('can read multiple items and left join data from another lists', async () => {
             await dba.create('messages', { data: {id: 1, users_id: 1, message: 'cakes are awesome'} });
             await dba.create('messages', { data: {id: 2, users_id: 2, message: 'I like popsicles'} });
             await dba.create('users', { data: {id: 1, name: 'jane joe'} });
@@ -451,7 +456,7 @@ Object.keys(dbis).forEach(dbiName => {
             expect(result[0].users[0].name).toEqual('jane joe');
         });
 
-        xit('can read multiple items and right join data from another lists', async () => {
+        it('can read multiple items and right join data from another lists', async () => {
             await dba.create('messages', { data: {id: 1, users_id: 1, message: 'cakes are awesome'} });
             await dba.create('messages', { data: {id: 2, users_id: 2, message: 'I like popsicles'} });
             await dba.create('users', { data: {id: 2, name: 'Poppa joe'} });
@@ -465,12 +470,12 @@ Object.keys(dbis).forEach(dbiName => {
                 }
             });
 
+            expect(result.length).toEqual(1);
             expect(Array.isArray(result[0].users)).toEqual(true);
             expect(result[0].users[0].name).toEqual('Poppa joe');
-            expect(result.length).toEqual(1);
         });
 
-        xit('will assume join type on when including a child list', async () => {
+        it('will assume join type on when including a child list', async () => {
             await dba.create('users', { data: {id: 2, name: 'Poppa joe'} });
             await dba.create('messages', { data: {id: 1, users_id: 2, message: 'cakes are awesome'} });
             await dba.create('messages', { data: {id: 2, users_id: 2, message: 'I like popsicles'} });
@@ -484,7 +489,7 @@ Object.keys(dbis).forEach(dbiName => {
             expect(result[0].messages[0].message).toEqual('cakes are awesome');
         });
 
-        xit('will assume join type when a child list includes a parent list', async () => {
+        it('will assume join type when a child list includes a parent list', async () => {
             await dba.create('messages', { data: {id: 1, users_id: 1, message: 'cakes are awesome'} });
             await dba.create('messages', { data: {id: 2, users_id: 2, message: 'I like popsicles'} });
             await dba.create('users', { data: {id: 2, name: 'Poppa joe'} });
