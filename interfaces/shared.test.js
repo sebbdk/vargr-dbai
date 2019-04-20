@@ -391,7 +391,7 @@ Object.keys(dbis).forEach(dbiName => {
             expect(results.length).toEqual(3);
         });
 
-        xit('can update an item', async () => {
+        it('can update an item', async () => {
             await dba.create('messages', { data: {id: 1, name: 'john doe'} });
 
             const result = await dba.updateOne('messages', { where: {id: 1}, data: {name: 'jane doe'} });

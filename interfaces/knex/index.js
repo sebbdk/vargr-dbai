@@ -139,19 +139,22 @@ module.exports = class {
         if(include) { // find and add join/include data
             const includeKeys = Object.keys(include);
             for(let i = 0; i < includeKeys.length; i++) {
+                // Sensible defaults for has many x
                 const key = includeKeys[i];
                 let lKey = `id`;
                 let fKey = `${listName}_id`;
+
                 if (include[key].on) {
                     const onKey = Object.keys(include[key].on).pop();
-
-                    // switch these two if, fKey exists on local model definition
                     fKey = include[key].on[onKey];
                     lKey = onKey;
+                } else if(this.collectionDefs[listName][`${includeKeys[i]}_id`] !== undefined) {
+                    // Sensible defaults for belongs to x
+                    fKey = `${includeKeys[i]}_id`;
+                    fKey = [lKey, lKey=fKey][0];
                 }
 
                 const lKeys = objectMap.map(item => item[lKey])
-
                 const subResults = await this.find(includeKeys[i], {
                     where: {
                         [fKey]:{
