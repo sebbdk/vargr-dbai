@@ -1,4 +1,5 @@
 const { MongoClient } = require('mongodb');
+const uuidv4 = require('uuid/v4');
 
 const formatters = {
     "$notLike": (res, key) => {
@@ -132,13 +133,28 @@ module.exports = class {
         });
     }
 
-    async create(listName, { data }) {
+    async create(listName, { data, returnRef = true }) {
+        let dataWithId = Array.isArray(data) ? data:[data];
+
+        dataWithId = dataWithId.map((item) => {
+            return { id: uuidv4(), ...item };
+        });
+
         if (Array.isArray(data)) {
-            const res = await this.db.collection(listName).insertMany(data);
-            return res.result.ok;
+            const res = await this.db.collection(listName).insertMany(dataWithId);
+            if (!returnRef) {
+                return res.result.ok;
+            }
+            return await this.db.collection(listName).find( { _id: { $in: Object.values(res.insertedIds) } } ).toArray();;
         } else {
-            const res = await this.db.collection(listName).insertOne(data);
-            return res.result.ok;
+            const res = await this.db.collection(listName).insertOne(dataWithId.pop());
+            if (!returnRef) {
+                return res.result.ok;
+            }
+
+            const findRes = await this.db.collection(listName).find({}).sort({_id:-1}).limit(1).toArray();
+
+            return findRes.pop();
         }
     }
 

@@ -159,6 +159,45 @@ Object.keys(dbis).forEach(dbiName => {
             expect(res[0].abc).toEqual('def');
         });
 
+        it('generate id if not present on create single document', async () => {
+            const result1 = await dba.create('messages', { data: {'abc':'def'} });
+
+            expect(typeof(result1.id)).toEqual('string');
+            expect(result1.id.length > 2).toBeTruthy();
+        });
+
+        it('generate id if not present on create multiple documents', async () => {
+            const result2 = await dba.create('messages', { data: [{'abc':'def'}, {'abc':'def'}] });
+
+            expect(typeof(result2[0].id)).toEqual('string');
+            expect(result2[0].id.length > 2).toBeTruthy();
+
+            expect(typeof(result2[1].id)).toEqual('string');
+            expect(result2[1].id.length > 2).toBeTruthy();
+        });
+
+        it('create returns inserted item', async () => {
+            const result = await dba.create('messages', { data: {'abc':'hello'} });
+            expect(result.abc).toEqual('hello');
+        });
+
+        it('create multiple returns inserted items', async () => {
+            const result = await dba.create('messages', {
+                data: [
+                    {'id':'1', 'name':'halback'},
+                    {'id':'2', 'name':'pickelback'}
+                ]
+            });
+
+            expect(result[0].name).toEqual('halback');
+            expect(result[1].name).toEqual('pickelback');
+        });
+
+        it('create can optionally not return insert reference', async () => {
+            const result = await dba.create('messages', { data: {'abc':'hello'}, returnRef: false });
+            expect(result).toBeTruthy();
+        });
+
         it('can create multiple items at once', async () => {
             const result = await dba.create('messages', {
                 data: [
@@ -178,7 +217,6 @@ Object.keys(dbis).forEach(dbiName => {
             await dba.create('messages', { data: {id: 3, name: 'poppa doe'} });
 
             const result = await dba.findOne('messages', { where: { id: 2 }});
-
             expect(result.name).toEqual('jane doe');
         });
 

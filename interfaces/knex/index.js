@@ -1,5 +1,5 @@
 const knex = require('knex');
-
+const uuidv4 = require('uuid/v4');
 module.exports = class {
 
     constructor() {
@@ -21,6 +21,7 @@ module.exports = class {
         return new Promise(async (resolve, reject) => {
             const exists = await this.db.schema.hasTable(collectionName);
             if(!exists) {
+                modelDef.id = modelDef.id ? modelDef.id : 'string';
                 await this.db.schema.createTable(collectionName, async (table) => {
                     Object.keys(modelDef).forEach(key => {
                         if (typeof(modelDef[key]) === 'string') {
@@ -28,7 +29,7 @@ module.exports = class {
                         } else {
                             const col = table[modelDef[key].type](key);
 
-                            if(modelDef[key].primary) {
+                            if(modelDef[key].primaryKey) {
                                 col.primary();
                             }
                         }
@@ -177,9 +178,19 @@ module.exports = class {
     };
 
     async create(listName, { data }) {
-        return await this
+        let d = Array.isArray(data) ? data:[data];
+
+        d = d.map((item) => {
+            return { id: uuidv4(), ...item };
+        });
+
+        const insertItem = Array.isArray(data) ? d:d[0];
+
+        await this
             .db(listName)
-            .insert(data)
+            .insert(insertItem);
+
+        return insertItem;
     }
 
     async findOne(listName, { where = {}, limit, offset, include =  false } = {})  {

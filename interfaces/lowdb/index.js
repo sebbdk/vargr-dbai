@@ -1,6 +1,7 @@
 const low = require('lowdb')
 const FileSync = require('lowdb/adapters/FileSync')
 const Memory = require('lowdb/adapters/Memory')
+const uuidv4 = require('uuid/v4');
 
 const lookTypes = {
     '$like': (field, lookValue) => {
@@ -62,13 +63,21 @@ module.exports = class {
         this.db.setState(state)
     }
 
-    async create(list, { data }) {
-        const items = Array.isArray(data) ? data : [data];
+    async create(list, { data, returnRef = true }) {
+        let dataWithId = Array.isArray(data) ? data:[data];
+
+        dataWithId = dataWithId.map((item) => {
+            return { id: uuidv4(), ...item };
+        });
         const listRef = this.db.get(list);
 
-        return items.map(item => {
+        dataWithId.map(item => {
             listRef.push(item).write()
         });
+
+        const returnData = Array.isArray(data) ? dataWithId : dataWithId.pop();
+
+        return returnRef ? returnData : true;
     }
 
     async find(listName, { offset = 0, limit = 20, where, include, orderBy } = {}) {

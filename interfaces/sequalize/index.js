@@ -109,12 +109,19 @@ module.exports = class {
         return  res;
     }
 
-    async create(listName, { data }) {
+    async create(listName, { data, returnRef = true }) {
         try {
             const method = Array.isArray(data) ? 'bulkCreate' : 'create';
             const res = await this.collections[listName][method](data);
-            return res;
+
+            if (!returnRef) {
+                return true;
+            }
+
+            const findRes = Array.isArray(data) ? await res.map(el => el.get({ plain: true })) : res.get({ plain: true });
+            return findRes;
         } catch(err) {
+            console.error(err);
             return false;
         }
     };
