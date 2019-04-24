@@ -185,6 +185,10 @@ module.exports = class {
             nest: true
         });
 
+        if(!res) {
+            return false;
+        }
+
         res = await res.get({ plain: true })
 
         Object.keys(include).forEach(key => {

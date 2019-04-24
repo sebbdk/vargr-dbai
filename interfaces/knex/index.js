@@ -195,7 +195,7 @@ module.exports = class {
 
     async findOne(listName, { where = {}, limit, offset, include =  false } = {})  {
         const res = await this.find(listName, { where, limit: 1, offset, include});
-        return res.pop();
+        return res.length > 0 ? res.pop() : false;
     };
 
     async updateOne(listName, { data = {}, where = {}} = {})  {

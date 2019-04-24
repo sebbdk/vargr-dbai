@@ -220,6 +220,11 @@ Object.keys(dbis).forEach(dbiName => {
             expect(result.name).toEqual('jane doe');
         });
 
+        it('return false if single item cannot be found', async () => {
+            const result = await dba.findOne('messages', { where: { id: 2 }});
+            expect(result).toEqual(false);
+        });
+
         it('can find many items', async () => {
             await dba.create('messages', { data: {id: 1, name: 'john doe'} });
             await dba.create('messages', { data: {id: 2, name: 'jane doe'} });

@@ -209,7 +209,7 @@ module.exports = class {
             .aggregate(aggregateOptions)
             .toArray();
 
-        return res.pop();
+        return res.length > 0 ? res.pop() : false;
     }
 
     async updateOne(listName, { data = {}, where = {} } = {}) {

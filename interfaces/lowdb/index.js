@@ -163,7 +163,7 @@ module.exports = class {
 
     async findOne(list, query = {}) {
         const results = await this.find(list, query);
-        return results.length > 0 ? results.shift() : null;
+        return results.length > 0 ? results.shift() : false;
     }
 
     async updateOne(list, query = {}) {
