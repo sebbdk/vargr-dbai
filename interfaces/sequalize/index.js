@@ -1,4 +1,5 @@
 const Sequelize = require('Sequelize');
+const uuidv4 = require('uuid/v4');
 
 /*
 
@@ -111,15 +112,46 @@ module.exports = class {
 
     async create(listName, { data, returnRef = true }) {
         try {
-            const method = Array.isArray(data) ? 'bulkCreate' : 'create';
-            const res = await this.collections[listName][method](data);
+            let dataWithId = Array.isArray(data) ? data:[data];
+
+            dataWithId = dataWithId.map((item) => {
+                return { id: uuidv4(), ...item };
+            });
+    
+            for(let d = 0; d < dataWithId.length; d++) {
+                const item = dataWithId[d];
+                const id = !item.id ? uuidv4():item.id;
+    
+                dataWithId[d] = { id, ...item };
+    
+                const collectionNames = Object.keys(this.collections);
+
+                for(let c = 0; c < collectionNames.length; c++) {
+                    const colName = collectionNames[c];
+    
+                    if (item[colName]) {
+                        item[colName].forEach((subItem) => {
+                            subItem[listName + '_id'] = id;
+                        });
+    
+                        const subr = await this.create(colName, {
+                            data: item[colName],
+                            returnRef
+                        });
+    
+                        dataWithId[d][colName] = subr;
+                    }
+                }
+            }
+
+            const res = await this.collections[listName].bulkCreate(dataWithId);
 
             if (!returnRef) {
                 return true;
             }
 
-            const findRes = Array.isArray(data) ? await res.map(el => el.get({ plain: true })) : res.get({ plain: true });
-            return findRes;
+            const findRes = await res.map(el => el.get({ plain: true }));
+            return Array.isArray(data) ? findRes : findRes.pop();
         } catch(err) {
             console.error(err);
             return false;
@@ -162,7 +194,6 @@ module.exports = class {
             console.error(error);
             return false;
         }
-
     }
 
     async findOne(listName, { where = {}, limit, offset, include =  false } = {}) {
@@ -189,11 +220,11 @@ module.exports = class {
             return false;
         }
 
-        res = await res.get({ plain: true })
+        res = await res.get({ plain: true });
 
         Object.keys(include).forEach(key => {
             res[key] = Array.isArray(res[key]) ? res[key] : [res[key]];
-        })
+        });
 
         return res;
     }

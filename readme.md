@@ -17,6 +17,7 @@ So
 * Knex (Postgres, MySQL, MariaDB, SQLite and Microsoft SQL Server)
 
 ## Todo:
+* Add soft delete
 * Use symbols instead of strings for query operations ($or, $like, et..)
 * Documentation
 * Test suite refactor

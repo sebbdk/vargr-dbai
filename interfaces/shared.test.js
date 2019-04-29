@@ -159,6 +159,23 @@ Object.keys(dbis).forEach(dbiName => {
             expect(res[0].abc).toEqual('def');
         });
 
+        it('will save nested / related data if included and matching list exists', async () => {
+            const result = await dba.create('users', {
+                data: {
+                    id: 20,
+                    name: 'major pain',
+                    messages: [
+                        { message: 'fart' },
+                        { message: 'big fart' },
+                    ]
+                }
+            });
+
+            expect(result).toBeTruthy();
+            const res = await dba.find('messages', { where: { users_id: 20 } });
+            expect(res.length).toEqual(2);
+        });
+
         it('generate id if not present on create single document', async () => {
             const result1 = await dba.create('messages', { data: {'abc':'def'} });
 

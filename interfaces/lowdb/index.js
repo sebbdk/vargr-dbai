@@ -32,7 +32,7 @@ function matchField(field, options) {
         return lookTypes[lookType](field, options[lookType]);
     }
 
-    return field === options;
+    return field == options;
 }
 
 module.exports = class {
@@ -46,6 +46,8 @@ module.exports = class {
         const preppedLists = Object.keys(lists)
             .reduce((acc, list) => ({...acc, [list]: []}), {});
 
+        this.collectionNames = Object.keys(lists);
+
         this.db.defaults(preppedLists).write();
     }
 
@@ -55,6 +57,7 @@ module.exports = class {
 
     async createCollection(name, { initialItems = [] } = {}) {
         this.db.defaults({ [name]: initialItems }).write();
+        this.collectionNames.push(name);
     }
 
     async removeCollection(name) {
@@ -63,17 +66,39 @@ module.exports = class {
         this.db.setState(state)
     }
 
-    async create(list, { data, returnRef = true }) {
+    async create(listName, { data, returnRef = true }) {
         let dataWithId = Array.isArray(data) ? data:[data];
 
-        dataWithId = dataWithId.map((item) => {
-            return { id: uuidv4(), ...item };
-        });
-        const listRef = this.db.get(list);
+        for(let d = 0; d < dataWithId.length; d++) {
+            const item = dataWithId[d];
+            const id = !item.id ? uuidv4():item.id;
+
+            dataWithId[d] = { id, ...item };
+
+            for(let c = 0; c < this.collectionNames.length; c++) {
+                const collectionName = this.collectionNames[c];
+
+                if (item[collectionName]) {
+                    item[collectionName].forEach((subItem) => {
+                        subItem[listName + '_id'] = id;
+                    });
+
+                    const subr = await this.create(collectionName, {
+                        data: item[collectionName],
+                        returnRef
+                    });
+
+                    dataWithId[d][collectionName] = subr;
+                }
+            }
+        }
+
+        const listRef = this.db.get(listName);
 
         dataWithId.map(item => {
             listRef.push(item).write()
         });
+
 
         const returnData = Array.isArray(data) ? dataWithId : dataWithId.pop();
 
@@ -184,7 +209,36 @@ module.exports = class {
             .write();
     }
 
-    async delete(list, query) {
-        return this.db.get(list).remove(query.where).write();
+    async delete(list, { where }) {
+        return this.db.get(list).remove((item) => {
+            let match = true;
+            let hasOrMatch = false;
+
+            // @todo Move to method
+            if (where) {
+                for (const [key, value] of Object.entries(where)) {
+                    if (key !== '$or' && !matchField(item[key], value)) {
+                        match = false;
+                        break;
+                    }
+                }
+            }
+
+            // @todo Move to method
+            if (where && where.$or !== undefined) {
+                for (const orSel of where.$or) {
+                    for (const [key, value] of Object.entries(orSel)) {
+                        if (matchField(item[key], value)) {
+                            hasOrMatch = true;
+                            break;
+                        }
+                    }
+                }
+
+                match = match && hasOrMatch;
+            }
+
+            return match;
+        }).write();
     }
 }

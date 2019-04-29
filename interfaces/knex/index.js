@@ -4,6 +4,7 @@ module.exports = class {
 
     constructor() {
         this.collections = {};
+        this.collectionNames = [];
         this.collectionDefs = {};
     }
 
@@ -38,6 +39,7 @@ module.exports = class {
             }
 
             this.create(collectionName, { data: initialItems });
+            this.collectionNames.push(collectionName);
 
             resolve(true);
         });
@@ -177,20 +179,43 @@ module.exports = class {
         return objectMap;
     };
 
-    async create(listName, { data }) {
-        let d = Array.isArray(data) ? data:[data];
+    async create(listName, { data, returnRef = true }) {
+        let dataWithId = Array.isArray(data) ? data:[data];
 
-        d = d.map((item) => {
+        dataWithId = dataWithId.map((item) => {
             return { id: uuidv4(), ...item };
         });
 
-        const insertItem = Array.isArray(data) ? d:d[0];
+        for(let d = 0; d < dataWithId.length; d++) {
+            const item = dataWithId[d];
+            const id = !item.id ? uuidv4():item.id;
+
+            for(let c = 0; c < this.collectionNames.length; c++) {
+                const colName = this.collectionNames[c];
+
+                if (item[colName]) {
+                    item[colName].forEach((subItem) => {
+                        subItem[listName + '_id'] = id;
+                    });
+
+                    const subr = await this.create(colName, {
+                        data: item[colName],
+                        returnRef
+                    });
+
+                    delete item[colName];
+                }
+            }
+
+            dataWithId[d] = { id, ...item };
+        }
 
         await this
             .db(listName)
-            .insert(insertItem);
+            .insert(dataWithId);
 
-        return insertItem;
+        const res = Array.isArray(data) ? dataWithId : dataWithId.pop();
+        return returnRef ? res : true;
     }
 
     async findOne(listName, { where = {}, limit, offset, include =  false } = {})  {

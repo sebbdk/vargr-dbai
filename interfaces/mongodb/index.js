@@ -32,6 +32,7 @@ module.exports = class {
 
     constructor() {
         this.collectionMapCache = {};
+        this.collectionNames = [];
     }
 
     async init({ port = 27017, dbname = 'test' }) {
@@ -122,6 +123,8 @@ module.exports = class {
             await this.db.collection(name).insertMany(initialItems);
         }
 
+        this.collectionNames.push(name);
+
         return result;
     }
 
@@ -139,6 +142,30 @@ module.exports = class {
         dataWithId = dataWithId.map((item) => {
             return { id: uuidv4(), ...item };
         });
+
+        for(let d = 0; d < dataWithId.length; d++) {
+            const item = dataWithId[d];
+            const id = !item.id ? uuidv4():item.id;
+
+            dataWithId[d] = { id, ...item };
+
+            for(let c = 0; c < this.collectionNames.length; c++) {
+                const collectionName = this.collectionNames[c];
+
+                if (item[collectionName]) {
+                    item[collectionName].forEach((subItem) => {
+                        subItem[listName + '_id'] = id;
+                    });
+
+                    const subr = await this.create(collectionName, {
+                        data: item[collectionName],
+                        returnRef
+                    });
+
+                    dataWithId[d][collectionName] = subr;
+                }
+            }
+        }
 
         if (Array.isArray(data)) {
             const res = await this.db.collection(listName).insertMany(dataWithId);
