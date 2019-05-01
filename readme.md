@@ -12,6 +12,7 @@ The price, is an overhead in translating queries and results, as well as not bei
 * LowDB
 * MongoDB
 * Sequalize (Postgres, MySQL, MariaDB, SQLite and Microsoft SQL Server)
+  - This might get deprecated as Knex does the same, but simpler.
 * Knex (Postgres, MySQL, MariaDB, SQLite and Microsoft SQL Server)
 
 ## Todo:
