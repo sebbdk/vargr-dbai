@@ -22,6 +22,7 @@ The price, is an overhead in translating queries and results, as well as not bei
 * Consider adding support for immutable documents/rows
 * Test suite refactor
 * More testing...
+* Performance comparison and improvements
 * Pick new integrations, Redis, CouchDB..??
    * https://insights.stackoverflow.com/survey/2019?utm_source=so-owned&utm_medium=announcement-banner&utm_campaign=dev-survey-2019#technology-_-most-loved-dreaded-and-wanted-databases
 * Are there any common missing use cases?
