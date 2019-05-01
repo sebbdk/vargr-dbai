@@ -8,7 +8,7 @@ This is not and ORM, or a query builder, but has features from both.
 The gain is the abillity to write generic layers for Auth, Rest, Validation etc. will work across databases.
 The price, is an overhead in translating queries and results, as well as not being able to do complex queries.
 
-## Supported storage libraries/databases
+## Storage integrations
 * LowDB
 * MongoDB
 * Sequalize (Postgres, MySQL, MariaDB, SQLite and Microsoft SQL Server)
