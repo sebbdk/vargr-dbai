@@ -16,7 +16,7 @@ The price, is an overhead in translating queries and results, as well as not bei
 * Knex (Postgres, MySQL, MariaDB, SQLite and Microsoft SQL Server)
 
 ## Todo:
-* Add option soft delete (on by default)
+* Add optional soft delete (on by default)
 * Use symbols instead of strings for query operations ($or, $like, et..)
 * Documentation
 * Consider adding support for immutable documents/rows
