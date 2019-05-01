@@ -1,6 +1,6 @@
 # Vargr DBai
 
-One API, all the databases
+**One API, all the databases.**
 
 This is a simplified API that allows one to do all common CRUD methods on a variaty of databases using the same API.
 This is not and ORM, or a query builder, but has features from both.
