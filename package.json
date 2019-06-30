@@ -1,6 +1,6 @@
 {
-  "name": "vargr-dbai",
-  "version": "0.0.1",
+  "name": "@vargr/vargr-dbai",
+  "version": "0.1.0",
   "main": "index.js",
   "license": "MIT",
   "scripts": {
@@ -17,5 +17,22 @@
     "mysql2": "^1.6.5",
     "sequelize": "^5.3.0",
     "uuid": "^3.3.2"
-  }
+  },
+  "description": "**One API, all the databases.**",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sebbdk/vargr-koida.git"
+  },
+  "keywords": [
+    "db",
+    "api",
+    "crud",
+    "sql",
+    "nosql"
+  ],
+  "author": "Vargr",
+  "bugs": {
+    "url": "https://github.com/sebbdk/vargr-koida/issues"
+  },
+  "homepage": "https://github.com/sebbdk/vargr-koida#readme"
 }
